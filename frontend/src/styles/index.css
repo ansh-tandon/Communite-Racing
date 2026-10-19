@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Headline face: PP Formula Condensed (Pangram Pangram), a commercial font.
+ * Its free trial files are for personal/testing use only, so it isn't shipped yet.
+ * After buying a web licence, put the files in public/fonts/ and uncomment below;
+ * headlines switch over on their own (Barlow Condensed is the stand-in until then).
+ *
+ * @font-face {
+ *   font-family: 'PP Formula Condensed';
+ *   src: url('/fonts/PPFormula-CondensedBlack.woff2') format('woff2');
+ *   font-weight: 900;
+ *   font-style: normal;
+ *   font-display: swap;
+ * }
+ * @font-face {
+ *   font-family: 'PP Formula Condensed';
+ *   src: url('/fonts/PPFormula-CondensedBold.woff2') format('woff2');
+ *   font-weight: 700;
+ *   font-style: normal;
+ *   font-display: swap;
+ * }
+ */
+
+@layer base {
+  /*
+   * --tabbar: the height of the phone tab bar (safe area included). Pinned bars, toasts and
+   * the page's bottom padding sit on it. 0 on laptops, and 0 while the phone keyboard is
+   * open (useSoftKeyboard), when the tab bar slides away.
+   */
+  :root { --tabbar: calc(64px + env(safe-area-inset-bottom)); }
+  @media (min-width: 768px) { :root { --tabbar: 0px; } }
+  html[data-keyboard='open'] { --tabbar: 0px; }
+
+  html { -webkit-text-size-adjust: 100%; color-scheme: dark; -webkit-tap-highlight-color: transparent; }
+  /* no double-tap-zoom delay on controls; every control has its own pressed state instead */
+  a, button, input, select, textarea, label, [role='button'] { touch-action: manipulation; }
+  body {
+    @apply bg-bg text-ink font-sans antialiased;
+  }
+  ::selection { background: #E10600; color: #fff; }
+  :focus-visible { outline: 2px solid #F5F5F5; outline-offset: 2px; border-radius: 6px; }
+  /* headings focused by script (after the intro) aren't controls */
+  [tabindex="-1"]:focus { outline: none; }
+  h1, h2, h3 { text-wrap: balance; }
+}
+
+@layer components {
+  /* page gutters that also clear the notch on a phone held sideways */
+  .px-safe {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+  @media (min-width: 640px) {
+    .px-safe {
+      padding-left: max(1.5rem, env(safe-area-inset-left));
+      padding-right: max(1.5rem, env(safe-area-inset-right));
+    }
+  }
+
+  .font-display { letter-spacing: 0.005em; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* surfaces */
+  .panel { @apply rounded-2xl bg-surface border border-line shadow-card; }
+  .panel-2 { @apply rounded-xl bg-surface2 border border-line; }
+
+  /* small sector-style label, e.g. "S1 · ROUND 18" */
+  .sector { @apply font-display text-[13px] font-semibold uppercase tracking-[0.14em] text-muted; }
+
+  /* thin red speed-stripe used under page titles */
+  .stripe { height: 3px; width: 44px; border-radius: 2px; background: linear-gradient(90deg, #E10600, #FF2A1F 60%, transparent); }
+
+  .carbon {
+    background-color: #0B0D10;
+    background-image:
+      linear-gradient(45deg, rgba(255,255,255,0.018) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.018) 75%),
+      linear-gradient(45deg, rgba(255,255,255,0.018) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.018) 75%);
+    background-size: 6px 6px;
+    background-position: 0 0, 3px 3px;
+  }
+
+  /*
+   * Number-question slider. 44px tall so a thumb can grab it; the filled part of the track is
+   * --pct wide in --fill (red once answered, grey while it's only a suggestion).
+   */
+  .range { -webkit-appearance: none; appearance: none; height: 44px; background: transparent; cursor: pointer; }
+  .range::-webkit-slider-runnable-track {
+    height: 4px; border-radius: 2px;
+    background: linear-gradient(to right, var(--fill, #E10600) var(--pct, 50%), #262E39 var(--pct, 50%));
+  }
+  .range::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 24px; height: 24px; margin-top: -10px; border-radius: 50%;
+    background: #F5F5F5; border: 5px solid var(--fill, #E10600);
+  }
+  .range::-moz-range-track { height: 4px; border-radius: 2px; background: #262E39; }
+  .range::-moz-range-progress { height: 4px; border-radius: 2px; background: var(--fill, #E10600); }
+  .range::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #F5F5F5; border: 5px solid var(--fill, #E10600); }
+  .range:disabled { cursor: default; opacity: 0.45; }
+
+  .skeleton {
+    background: linear-gradient(90deg, #1B2129 0px, #232A34 120px, #1B2129 240px);
+    background-size: 800px 100%;
+    @apply animate-shimmer rounded-lg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+}

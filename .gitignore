@@ -1,0 +1,25 @@
+# Secrets and local settings
+.env
+.env.local
+.env.*.local
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Tool working files
+.taste-skill/
+.playwright-mcp/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

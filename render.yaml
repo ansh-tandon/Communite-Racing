@@ -1,0 +1,61 @@
+# Render Blueprint. Not deployed yet. When it's time:
+# Render dashboard → New → Blueprint → pick this repo → fill in the values it asks for.
+# See "Deploying to Render" in README.md.
+
+databases:
+  - name: crql-db
+    databaseName: crql
+    plan: free # free Postgres expires after 30 days; move to basic-256mb for a full season
+
+services:
+  # FastAPI backend + admin panel (/admin)
+  - type: web
+    name: crql-api
+    runtime: python
+    rootDir: backend
+    plan: free # free instances sleep after 15 idle minutes; answers still lock on time
+    buildCommand: pip install -r requirements.txt
+    startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips="*"
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: crql-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_EMAILS # comma-separated; these become admins on login
+        sync: false
+      - key: RESEND_API_KEY # empty = login codes are printed in the service log
+        sync: false
+      - key: EMAIL_FROM
+        value: Communitie Racing <quiz@communitie.racing>
+      - key: FRONTEND_ORIGIN # the web app's URL; comma-separate to add a custom domain
+        value: https://crql.onrender.com
+      - key: SENTRY_DSN
+        sync: false
+
+  # React web app (static site)
+  - type: web
+    name: crql
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: VITE_API_URL # the API's URL, baked in at build time
+        value: https://crql-api.onrender.com
+      - key: VITE_DEMO
+        value: "false"
+    routes:
+      - type: rewrite # single-page app: every path serves index.html
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
