@@ -9,6 +9,8 @@ import type {
 export const auth = {
   requestCode: (email: string) => api<{ sent: true }>('/auth/otp/request', { method: 'POST', body: { email } }),
   verify: (email: string, code: string) => api<TokenOut>('/auth/otp/verify', { method: 'POST', body: { email, code } }),
+  /** The ID token from Google's "Continue with Google" button. */
+  google: (credential: string) => api<TokenOut>('/auth/google', { method: 'POST', body: { credential } }),
   me: () => api<User>('/auth/me'),
   updateMe: (display_name: string) => api<User>('/auth/me', { method: 'PATCH', body: { display_name } }),
 };

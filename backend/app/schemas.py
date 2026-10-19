@@ -3,6 +3,7 @@ from typing import Any, Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
+from app.services.openf1.rules import validate_auto
 from app.services.questions import Invalid, validate_question
 
 # ---------- auth ----------
@@ -15,6 +16,10 @@ class OtpRequest(BaseModel):
 class OtpVerify(BaseModel):
     email: EmailStr
     code: str = Field(pattern=r"^\d{6}$")
+
+
+class GoogleSignIn(BaseModel):
+    credential: str = Field(min_length=1, max_length=4096)  # the ID token from Google's button
 
 
 class UserOut(BaseModel):
@@ -143,11 +148,14 @@ class QuestionIn(BaseModel):
     options: list[str] = []
     config: dict[str, Any] = {}
     sequence: int | None = Field(default=None, ge=1)
+    # OpenF1 auto-answer, e.g. {"rule": "winner"}. See GET /admin/openf1/rules. None = entered by hand.
+    auto: dict[str, Any] | None = None
 
     @model_validator(mode="after")
     def check_shape(self):
         try:
             validate_question(self.type, self.options, self.config)
+            self.auto = validate_auto(self.type, self.auto)
         except Invalid as e:
             raise ValueError(str(e))
         return self
@@ -185,12 +193,19 @@ class AdminRace(BaseModel):
     status: str
     reveal_immediately: bool
     published_at: datetime | None
+    openf1_session_key: int | None = None
+
+
+class AdminQuestionOut(QuestionOut):
+    auto: dict[str, Any] | None = None
 
 
 class AdminRaceDetail(AdminRace):
     entries: int
-    questions: list[QuestionOut]
+    questions: list[AdminQuestionOut]
     answer_key: dict[int, Any]
+    # Where each result came from: manual | openf1 | openf1_live (provisional)
+    answer_key_sources: dict[int, str] = {}
 
 
 class CopyQuestionsIn(BaseModel):

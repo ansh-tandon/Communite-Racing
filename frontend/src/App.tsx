@@ -7,6 +7,7 @@ import { AdminNewRacePage, AdminRacePage, AdminRacesPage } from './pages/AdminPa
 import HomePage from './pages/HomePage';
 // Logged-in visits never need the login page's code.
 const LoginPage = lazy(() => import('./pages/LoginPage'));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 import { LeaderboardPage, NotFoundPage, ProfilePage } from './pages/PeoplePages';
 import QuizArenaPage, { QuizIndex } from './pages/QuizArenaPage';
 import { RaceHubPage, RacesPage } from './pages/RacePages';
@@ -28,6 +29,8 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Suspense fallback={<div className="min-h-dvh bg-bg" />}><LoginPage /></Suspense>} />
+      {/* public: Google's consent screen links here */}
+      <Route path="/privacy" element={<Suspense fallback={<div className="min-h-dvh bg-bg" />}><PrivacyPage /></Suspense>} />
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>
           <Route index element={<HomePage />} />

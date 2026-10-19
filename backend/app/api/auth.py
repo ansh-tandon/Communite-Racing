@@ -2,8 +2,9 @@ from fastapi import APIRouter, HTTPException, status
 
 from app.core.deps import CurrentUser, Session
 from app.core.security import create_token
-from app.schemas import OtpRequest, OtpVerify, ProfileUpdate, TokenOut, UserOut
+from app.schemas import GoogleSignIn, OtpRequest, OtpVerify, ProfileUpdate, TokenOut, UserOut
 from app.services.email import send_otp_email
+from app.services.google_auth import GoogleAuthError, sign_in_with_google
 from app.services.otp import OtpError, issue_code, verify_code
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -27,6 +28,15 @@ async def verify(body: OtpVerify, session: Session) -> TokenOut:
     try:
         user = await verify_code(session, body.email, body.code)
     except OtpError as e:
+        raise HTTPException(e.status, str(e))
+    return TokenOut(access_token=create_token(user.id), user=UserOut.model_validate(user))
+
+
+@router.post("/google")
+async def google(body: GoogleSignIn, session: Session) -> TokenOut:
+    try:
+        user = await sign_in_with_google(session, body.credential)
+    except GoogleAuthError as e:
         raise HTTPException(e.status, str(e))
     return TokenOut(access_token=create_token(user.id), user=UserOut.model_validate(user))
 

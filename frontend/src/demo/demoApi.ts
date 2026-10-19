@@ -206,6 +206,9 @@ function handle(path: string, { method, body, token }: Req): unknown {
     u.email = String(b.email).trim().toLowerCase();
     return { access_token: `demo.${ME}`, token_type: 'bearer', user: u };
   }
+  if (p === '/auth/google' && method === 'POST') {
+    return { access_token: `demo.${ME}`, token_type: 'bearer', user: db.users.find((x) => x.id === ME)! };
+  }
   const user = me(token);
   if (p === '/auth/me') {
     if (method === 'PATCH') {

@@ -1,12 +1,12 @@
 from datetime import timedelta
 
 from sqlalchemy import func, select
-from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.core.security import hash_otp, new_otp, normalize_email, otp_matches, utcnow
 from app.models import OtpCode, User
+from app.services.accounts import user_for_email
 
 
 class OtpError(Exception):
@@ -57,9 +57,6 @@ async def verify_code(session: AsyncSession, email: str, code: str) -> User:
         raise OtpError(f"Wrong code. {left} {'try' if left == 1 else 'tries'} left." if left else "Too many wrong tries. Request a new code.")
 
     otp.consumed_at = now
-    await session.execute(insert(User).values(email=email).on_conflict_do_nothing(index_elements=["email"]))
-    user = await session.scalar(select(User).where(User.email == email))
-    if email in s.admin_email_set:
-        user.is_admin = True
+    user = await user_for_email(session, email)
     await session.commit()
     return user

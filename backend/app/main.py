@@ -7,9 +7,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.admin_panel import mount_admin
-from app.api import admin, auth, races
+from app.api import admin, auth, openf1, races
 from app.core.config import get_settings
 from app.core.db import engine
+from app.services.openf1 import close_client
+from app.services.openf1.client import OpenF1Error, OpenF1Unavailable
+from app.services.openf1.sync import run_openf1_sync
 from app.services.races import ActionError
 from app.services.scheduler import run_scheduler
 
@@ -18,12 +21,18 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    task = asyncio.create_task(run_scheduler()) if get_settings().scheduler_enabled else None
+    s = get_settings()
+    tasks = []
+    if s.scheduler_enabled:
+        tasks.append(asyncio.create_task(run_scheduler()))
+        if s.openf1_enabled:
+            tasks.append(asyncio.create_task(run_openf1_sync()))
     yield
-    if task:
+    for task in tasks:
         task.cancel()
         with suppress(asyncio.CancelledError):
             await task
+    await close_client()
     await engine.dispose()
 
 
@@ -44,9 +53,14 @@ def create_app() -> FastAPI:
             body["errors"] = e.errors
         return JSONResponse(body, status_code=e.status)
 
+    @app.exception_handler(OpenF1Error)
+    async def openf1_error(_: Request, e: OpenF1Error) -> JSONResponse:
+        return JSONResponse({"detail": str(e)}, status_code=503 if isinstance(e, OpenF1Unavailable) else 502)
+
     app.include_router(auth.router)
     app.include_router(races.router)
     app.include_router(admin.router)
+    app.include_router(openf1.router)
     mount_admin(app)
 
     @app.get("/health", tags=["ops"])

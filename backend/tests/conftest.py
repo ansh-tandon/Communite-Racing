@@ -18,6 +18,7 @@ os.environ["DB_NULLPOOL"] = "true"
 os.environ["RESEND_API_KEY"] = ""
 os.environ["ADMIN_EMAILS"] = "admin@example.com"
 os.environ["FRONTEND_ORIGIN"] = "http://testserver"
+os.environ["GOOGLE_CLIENT_ID"] = "test-client.apps.googleusercontent.com"
 
 import logging  # noqa: E402
 

@@ -12,9 +12,13 @@ from sqlalchemy import and_, case, delete, func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import utcnow
 from app.models import Answer, AnswerKey, Question, Race, Score, Submission, User
+from app.services.questions import Invalid, validate_value
 from app.services.races import ActionError, check_values, questions_by_id
 from app.services.scoring import QuestionRule, ScoreResult, compute_scores, max_points
+
+LIVE_SOURCE = "openf1_live"  # provisional, read during the race: never scored
 
 def display_name():
     return func.coalesce(User.display_name, func.concat("Player ", User.id)).label("name")
@@ -27,6 +31,11 @@ def rules(questions: dict[int, Question]) -> list[QuestionRule]:
 async def answer_key(s: AsyncSession, race_id: int) -> dict[int, Any]:
     rows = await s.execute(select(AnswerKey.question_id, AnswerKey.correct_value).where(AnswerKey.race_id == race_id))
     return {qid: v for qid, v in rows}
+
+
+async def answer_key_sources(s: AsyncSession, race_id: int) -> dict[int, str]:
+    rows = await s.execute(select(AnswerKey.question_id, AnswerKey.source).where(AnswerKey.race_id == race_id))
+    return {qid: src for qid, src in rows}
 
 
 async def _upsert_key(s: AsyncSession, race_id: int, admin_id: int | None, values: dict[int, Any], source: str) -> None:
@@ -63,6 +72,52 @@ async def save_answer_key(
     await _upsert_key(s, race_id, admin_id, values, source)
     await s.commit()
     return await answer_key(s, race_id)
+
+
+def check_auto_allowed(race: Race | None) -> None:
+    """Automatic results are written only after answers lock, and never into a scored race."""
+    if race is None:
+        raise ActionError("Race not found.", 404)
+    if race.status in ("scoring", "scored"):
+        raise ActionError("This race is already scored. Use re-score to change results.")
+    if race.status == "draft" or (race.status == "open" and race.quiz_closes_at > utcnow()):
+        raise ActionError("Answers aren't locked yet. Results are filled in once the quiz closes.")
+
+
+async def save_auto_key(
+    s: AsyncSession, race_id: int, values: dict[int, Any], source: str, *, overwrite_manual: bool = False
+) -> dict[int, str]:
+    """Save results read from OpenF1. Returns {question_id: what happened}.
+
+    Only after answers lock, and never over a result the admin typed in (unless overwrite_manual):
+    a hand-entered correction always wins over the feed.
+    """
+    check_auto_allowed(await s.get(Race, race_id, with_for_update=True))
+    questions = await questions_by_id(s, race_id)
+    current = {qid: (v, src) for qid, v, src in await s.execute(
+        select(AnswerKey.question_id, AnswerKey.correct_value, AnswerKey.source).where(AnswerKey.race_id == race_id))}
+    status, rows = {}, {}
+    for qid, value in values.items():
+        q = questions.get(qid)
+        if q is None:
+            continue
+        if current.get(qid, (None, None))[1] == "manual" and not overwrite_manual:
+            status[qid] = "kept manual"
+            continue
+        try:
+            value = validate_value(q.type, q.options, q.config, value, is_key=True)
+        except Invalid as e:
+            status[qid] = f"not saved: {e}"
+            continue
+        if current.get(qid) == (value, source):
+            status[qid] = "unchanged"
+            continue
+        rows[qid] = value
+        status[qid] = "saved"
+    if rows:
+        await _upsert_key(s, race_id, None, rows, source)
+    await s.commit()
+    return status
 
 
 async def _why_not(s: AsyncSession, race_id: int, rescore: bool) -> ActionError:
@@ -105,6 +160,11 @@ async def score_race(
         missing = [f"Q{q.sequence}" for q in questions.values() if q.id not in key]
         if missing:
             raise ActionError(f"Enter results for every question first. Missing: {', '.join(missing)}.")
+        sources = await answer_key_sources(s, race_id)
+        live = [f"Q{q.sequence}" for q in questions.values() if sources.get(q.id) == LIVE_SOURCE]
+        if live:
+            raise ActionError(f"{', '.join(live)} still show live (provisional) OpenF1 results. "
+                              "Wait for the official classification or enter them by hand.")
 
         entries: dict[int, dict[int, Any]] = {
             uid: {} for uid in (await s.scalars(select(Submission.user_id).where(Submission.race_id == race_id))).all()

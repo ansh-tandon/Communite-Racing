@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type Ref } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowLeft, Mail, User, Volume2, VolumeX } from 'lucide-react';
 import { ApiError, DEMO, tokenStore } from '../api/client';
 import { auth } from '../api/endpoints';
 import type { TokenOut } from '../api/types';
+import { GOOGLE_SIGN_IN, GoogleButton } from '../components/GoogleButton';
 import { LazyGlobe } from '../components/LazyGlobe';
 import { Input } from '../components/ui/input';
 import { CardButton } from '../components/ui/sign-in-card-2';
@@ -297,6 +298,7 @@ export default function LoginPage() {
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [googleError, setGoogleError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
   // a new player's session, held here until they've picked the name others will see
   const pending = useRef<TokenOut | null>(null);
@@ -360,18 +362,34 @@ export default function LoginPage() {
     } finally { setBusy(false); }
   };
 
+  // Signed in, by code or by Google: save the name if one was typed, then open the app.
+  const welcome = async (t: TokenOut) => {
+    pending.current = t;
+    const n = tidyName(name);
+    if (n && n !== t.user.display_name) { await saveAs(t, n); return; }
+    if (t.user.display_name) { await enter(t); return; }
+    // a new player who left the name blank: ask once more, there's no way in without one
+    setStep('name');
+  };
+
   const verify = async (value: string) => {
     setBusy(true); setError(null);
     try {
-      const t = await auth.verify(email.trim(), value);
-      pending.current = t;
-      const n = tidyName(name);
-      if (n && n !== t.user.display_name) { await saveAs(t, n); return; }
-      if (t.user.display_name) { await enter(t); return; }
-      // a new player who left the name blank: ask once more, there's no way in without one
-      setStep('name');
+      await welcome(await auth.verify(email.trim(), value));
     } catch (err) {
       setError((err as Error).message); setCode('');
+    } finally { setBusy(false); }
+  };
+
+  const google = async (credential: string) => {
+    if (busy) return;
+    const n = tidyName(name);
+    if (n && nameProblem(n)) { setError(nameProblem(n)); return; }
+    setBusy(true); setError(null); setGoogleError(null);
+    try {
+      await welcome(await auth.google(credential));
+    } catch (err) {
+      setGoogleError((err as Error).message);
     } finally { setBusy(false); }
   };
 
@@ -441,6 +459,15 @@ export default function LoginPage() {
                   {expired && <p className="rounded-md border border-warn/30 bg-warn/10 px-3 py-2.5 text-sm text-warn">Your session ended. Log in again to carry on.</p>}
                   <div className="space-y-3">
                     <NameField value={name} onChange={(v) => { setName(v); setError(null); }} inputRef={nameRef} invalid={!!error && /name/i.test(error)} enterKeyHint="next" />
+                    {GOOGLE_SIGN_IN && (
+                      <>
+                        <GoogleButton onCredential={(c) => void google(c)} />
+                        {googleError && <p role="alert" className="text-sm text-accent-hi">{googleError}</p>}
+                        <div aria-hidden className="flex items-center gap-3 py-1 text-xs uppercase tracking-[0.14em] text-white/45">
+                          <span className="h-px flex-1 bg-white/10" />or use your email<span className="h-px flex-1 bg-white/10" />
+                        </div>
+                      </>
+                    )}
                     <label htmlFor="login-email" className="sr-only">Email</label>
                     <div className="relative flex items-center">
                       <Mail aria-hidden className={cx('pointer-events-none absolute left-3.5 h-4 w-4 transition-colors duration-200', emailFocused ? 'text-white' : 'text-white/45')} />
@@ -451,7 +478,7 @@ export default function LoginPage() {
                     </div>
                     {error && <p role="alert" className="text-sm text-accent-hi">{error}</p>}
                     <CardButton type="submit" loading={busy}>Send my code</CardButton>
-                    <p className="pt-1 text-sm leading-relaxed text-white/60">Your racing name is what other players see on the leaderboard. Already playing? Leave it blank to keep yours. No password: we email you a 6-digit code.</p>
+                    <p className="pt-1 text-sm leading-relaxed text-white/60">Your racing name is what other players see on the leaderboard. Already playing? Leave it blank to keep yours. No password: {GOOGLE_SIGN_IN ? 'continue with Google, or ' : ''}we email you a 6-digit code.</p>
                   </div>
                 </motion.form>
               )}
@@ -498,8 +525,10 @@ export default function LoginPage() {
           </div>
         </main>
 
-        {/* keeps the form clear of the iPhone home indicator */}
-        <div aria-hidden className="pb-[max(1.5rem,env(safe-area-inset-bottom))]" />
+        {/* the padding keeps the form clear of the iPhone home indicator */}
+        <footer className="pb-[max(1.5rem,env(safe-area-inset-bottom))] text-xs text-white/45">
+          <Link to="/privacy" className="inline-flex min-h-[44px] items-center transition-colors hover:text-white">Privacy</Link>
+        </footer>
       </div>
     </div>
   );

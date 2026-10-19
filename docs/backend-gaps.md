@@ -17,6 +17,6 @@ It shows an honest "not available yet" state instead, and each item lists the co
 | Editing questions after creating a race | Links to the SQLAdmin data panel at `<API>/admin`. | `PATCH /admin/races/{id}`, `PUT /admin/races/{id}/questions` |
 | Re-score reason shown to players | Not collected. | `reason` field on `POST /admin/races/{id}/rescore`, returned on the race |
 | Resend-code cooldown policy | Fixed 30 s in the UI; the server's 5-per-hour limit returns 429, which the UI explains. | Optional: `retry_after` in the 429 response |
-| Automatic answer-key drafts (OpenF1) | Admin enters or edits results by hand; "Save draft" never scores. | Ingestion job writing `answer_keys` with `source='openf1'`; UI already shows drafts before scoring |
+| Automatic answer-key drafts (OpenF1) | **Backend done** (`app/services/openf1`): live (`openf1_live`) and final (`openf1`) results per question rule. The admin screens don't yet show a question's rule or each result's source. | Already served: `auto` on admin questions, `answer_key_sources` and `openf1_session_key` on `GET /admin/races/{id}` |
 
 Not applicable to this league, so deliberately not built: quiz timers per question, difficulty and category labels, and instant correct/incorrect feedback. Every question here is a race prediction whose answer only exists after the race.

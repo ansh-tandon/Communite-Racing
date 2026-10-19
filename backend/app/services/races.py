@@ -93,7 +93,8 @@ async def copy_questions(s: AsyncSession, target_id: int, source_id: int | None 
         raise ActionError("That race has no questions.", 404)
     for q in source:
         s.add(Question(race_id=target_id, sequence=q.sequence, prompt=q.prompt, type=q.type,
-                       weight=q.weight, options=list(q.options), config=dict(q.config)))
+                       weight=q.weight, options=list(q.options), config=dict(q.config),
+                       auto=dict(q.auto) if q.auto else None))
     await s.commit()
     return len(source)
 

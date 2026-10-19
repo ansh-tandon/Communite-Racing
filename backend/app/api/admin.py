@@ -5,17 +5,17 @@ from sqlalchemy.exc import IntegrityError
 from app.core.deps import AdminUser, Session, admin_user
 from app.models import Question, Race
 from app.schemas import (
+    AdminQuestionOut,
     AdminRace,
     AdminRaceDetail,
     AnswerKeyIn,
     CopyQuestionsIn,
-    QuestionOut,
     RaceIn,
     RescoreIn,
     ScoreSummary,
 )
 from app.services import races as svc
-from app.services.results import answer_key, entry_count, publish_results, save_answer_key, score_race
+from app.services.results import answer_key, answer_key_sources, entry_count, publish_results, save_answer_key, score_race
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(admin_user)])
 
@@ -48,8 +48,9 @@ async def race_admin_detail(race_id: int, s: Session) -> AdminRaceDetail:
     return AdminRaceDetail(
         **AdminRace.model_validate(race).model_dump(),
         entries=await entry_count(s, race_id),
-        questions=[QuestionOut.model_validate(q) for q in questions.values()],
+        questions=[AdminQuestionOut.model_validate(q) for q in questions.values()],
         answer_key=await answer_key(s, race_id),
+        answer_key_sources=await answer_key_sources(s, race_id),
     )
 
 

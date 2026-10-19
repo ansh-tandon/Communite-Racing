@@ -33,6 +33,8 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(254), unique=True)
+    # Google's permanent account ID, set the first time they continue with Google.
+    google_sub: Mapped[str | None] = mapped_column(String(255), unique=True)
     display_name: Mapped[str | None] = mapped_column(String(40))
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     created_at: Mapped[datetime] = created_at()
@@ -75,6 +77,8 @@ class Race(Base):
     # True: results visible the moment scoring finishes. False: admin reviews, then publishes.
     reveal_immediately: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # OpenF1's race session, found automatically from the season and race day (or set by hand).
+    openf1_session_key: Mapped[int | None] = mapped_column(Integer)
     created_at: Mapped[datetime] = created_at()
 
     questions: Mapped[list["Question"]] = relationship(
@@ -103,6 +107,9 @@ class Question(Base):
     options: Mapped[list[Any]] = mapped_column(JSONB, default=list, server_default="[]")
     # Per-type rules, e.g. {"pick": 3} for multi, {"tolerance": 1} for number. Scoring reads this.
     config: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, server_default="{}")
+    # How OpenF1 answers it, e.g. {"rule": "winner"}. None = the admin enters the result by hand.
+    # See services/openf1/rules.py. Not part of scoring, so it can change after the quiz opens.
+    auto: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
 
     race: Mapped[Race] = relationship(back_populates="questions")
 
@@ -145,6 +152,7 @@ class AnswerKey(Base):
     race_id: Mapped[int] = mapped_column(ForeignKey("races.id", ondelete="CASCADE"))
     question_id: Mapped[int] = mapped_column(ForeignKey("questions.id", ondelete="CASCADE"))
     correct_value: Mapped[Any] = mapped_column(JSONB)
+    # manual | openf1 (official classification) | openf1_live (provisional, can't be scored)
     source: Mapped[str] = mapped_column(String(16), default="manual", server_default="manual")
     entered_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     entered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

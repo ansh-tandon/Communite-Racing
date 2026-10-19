@@ -14,7 +14,8 @@ import { validateValue } from '../utils/answers';
 import { fmtDateTime } from '../utils/format';
 
 const STATUS_TONE: Record<RaceStatus, 'grey' | 'green' | 'amber' | 'white' | 'red'> = { draft: 'grey', open: 'green', closed: 'amber', scoring: 'amber', scored: 'white' };
-const DATA_PANEL = DEMO ? null : `${API_URL}/admin`;
+// A relative API_URL is the dev proxy (vite.config.ts); the data panel needs the backend itself.
+const DATA_PANEL = DEMO ? null : API_URL.startsWith('/') ? 'http://localhost:8000/admin' : `${API_URL}/admin`;
 
 // ---------- list ----------
 export function AdminRacesPage() {

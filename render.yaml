@@ -17,6 +17,8 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips="*"
     healthCheckPath: /health
+    domains:
+      - api.communitieracing.in
     envVars:
       - key: PYTHON_VERSION
         value: 3.13.0
@@ -31,9 +33,13 @@ services:
       - key: RESEND_API_KEY # empty = login codes are printed in the service log
         sync: false
       - key: EMAIL_FROM
-        value: Communitie Racing <quiz@communitie.racing>
-      - key: FRONTEND_ORIGIN # the web app's URL; comma-separate to add a custom domain
-        value: https://crql.onrender.com
+        value: Communitie Racing <quiz@mail.communitieracing.in>
+      - key: EMAIL_LOGO_URL # logo in the email header
+        value: https://communitieracing.in/cr-logo-white.png
+      - key: GOOGLE_CLIENT_ID # OAuth web client ID; empty = no "Continue with Google"
+        sync: false
+      - key: FRONTEND_ORIGIN # every address the web app is served from
+        value: https://communitieracing.in,https://www.communitieracing.in,https://crql.onrender.com
       - key: SENTRY_DSN
         sync: false
 
@@ -44,13 +50,18 @@ services:
     rootDir: frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
+    domains: # www redirects to the bare domain
+      - communitieracing.in
+      - www.communitieracing.in
     envVars:
       - key: NODE_VERSION
         value: "22"
       - key: VITE_API_URL # the API's URL, baked in at build time
-        value: https://crql-api.onrender.com
+        value: https://api.communitieracing.in
       - key: VITE_DEMO
         value: "false"
+      - key: VITE_GOOGLE_CLIENT_ID # same as the API's GOOGLE_CLIENT_ID
+        sync: false
     routes:
       - type: rewrite # single-page app: every path serves index.html
         source: /*

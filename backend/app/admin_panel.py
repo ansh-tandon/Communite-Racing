@@ -23,6 +23,10 @@ from app.core.config import get_settings
 from app.core.db import SessionLocal, engine
 from app.models import Question, Race, Score, User
 from app.services import races as svc
+from app.services.openf1 import get_client
+from app.services.openf1.client import OpenF1Error
+from app.services.openf1.rules import validate_auto
+from app.services.openf1.sync import sync_race
 from app.services.otp import OtpError, verify_code
 from app.services.questions import TYPE_LABELS, Invalid, validate_question
 
@@ -109,13 +113,15 @@ class RaceAdmin(ModelView, model=Race):
     }
     column_formatters_detail = column_formatters
     form_columns = [Race.season, Race.round, Race.name, Race.circuit, Race.country,
-                    Race.quiz_opens_at, Race.quiz_closes_at, Race.reveal_immediately]
+                    Race.quiz_opens_at, Race.quiz_closes_at, Race.reveal_immediately, Race.openf1_session_key]
     form_overrides = {"quiz_opens_at": LocalDateTimeField, "quiz_closes_at": LocalDateTimeField}
     form_args = {
         "quiz_opens_at": {"label": "Quiz opens (IST)"},
         "quiz_closes_at": {"label": "Quiz closes (IST)", "description": "Answers lock at this exact time."},
         "reveal_immediately": {"label": "Show results as soon as scoring finishes",
                                "description": "Untick to review scores first, then publish."},
+        "openf1_session_key": {"label": "OpenF1 session key",
+                               "description": "Leave empty: found automatically from the season and quiz deadline."},
     }
 
     async def on_model_change(self, data, model, is_created, request):
@@ -131,7 +137,7 @@ class RaceAdmin(ModelView, model=Race):
         async with SessionLocal() as s:
             try:
                 await fn(s, pks[0])
-            except svc.ActionError as e:
+            except (svc.ActionError, OpenF1Error) as e:
                 return _message(str(e), back)
         return RedirectResponse(back, status_code=303)
 
@@ -150,6 +156,11 @@ class RaceAdmin(ModelView, model=Race):
     async def close_quiz(self, request: Request):
         return await self._run(request, svc.close_quiz)
 
+    @action(name="openf1_sync", label="Fill results from OpenF1 now",
+            confirmation_message="Read results from OpenF1 for every auto-answered question? Results you typed in stay.")
+    async def openf1_sync(self, request: Request):
+        return await self._run(request, lambda s, race_id: sync_race(s, get_client(), race_id))
+
 
 class QuestionAdmin(ModelView, model=Question):
     name, name_plural, icon = "Question", "Questions", "fa-solid fa-circle-question"
@@ -159,7 +170,7 @@ class QuestionAdmin(ModelView, model=Question):
     column_searchable_list = [Question.prompt]
     column_formatters = {Question.type: lambda m, a: TYPE_LABELS.get(m.type, m.type)}
     form_columns = [Question.race, Question.sequence, Question.prompt, Question.type, Question.weight,
-                    Question.options, Question.config]
+                    Question.options, Question.config, Question.auto]
     form_overrides = {"type": SelectField}
     form_args = {
         "type": {"choices": list(TYPE_LABELS.items())},
@@ -168,6 +179,10 @@ class QuestionAdmin(ModelView, model=Question):
         "options": {"description": 'Choices as a JSON list, e.g. ["VER", "NOR", "LEC"]. Use [] for Number and Yes / no.'},
         "config": {"description": 'Pick several / Put in order: {"pick": 3}. Number: {"min": 0, "max": 20, "tolerance": 1}. '
                                   'All-or-nothing scoring: add "scoring": "all". Otherwise {}.'},
+        "auto": {"label": "Auto-answer from OpenF1",
+                 "description": 'Optional. e.g. {"rule": "winner"}, {"rule": "top", "n": 3} (podium), '
+                                '{"rule": "top_after_lap", "lap": 10, "n": 10}, {"rule": "safety_car"}, '
+                                '{"rule": "pit_stops_under_sc"}. Every rule: GET /admin/openf1/rules. Empty = enter by hand.'},
     }
 
     async def on_model_change(self, data, model, is_created, request):
@@ -175,8 +190,11 @@ class QuestionAdmin(ModelView, model=Question):
             data["options"] = []
         if data.get("config") is None:
             data["config"] = {}
+        if data.get("auto") in ("", {}):
+            data["auto"] = None
         try:
             validate_question(data["type"], data["options"], data["config"])
+            data["auto"] = validate_auto(data["type"], data.get("auto"))
         except Invalid as e:
             raise ValueError(str(e))
         race_id = data["race"].id if hasattr(data.get("race"), "id") else (int(data["race"]) if data.get("race") else None)

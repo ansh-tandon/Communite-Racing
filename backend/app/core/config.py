@@ -17,7 +17,12 @@ class Settings(BaseSettings):
     otp_requests_per_hour: int = 5
 
     resend_api_key: str = ""
-    email_from: str = "Communitie Racing <quiz@communitie.racing>"
+    email_from: str = "Communitie Racing <quiz@mail.communitieracing.in>"
+    # Public URL of the white logo for the email header. Empty = the name in text instead.
+    email_logo_url: str = ""
+
+    # OAuth web client ID from Google Cloud. Empty = "Continue with Google" is switched off.
+    google_client_id: str = ""
 
     frontend_origin: str = "http://localhost:5173"
     admin_emails: str = ""
@@ -27,6 +32,16 @@ class Settings(BaseSettings):
     app_timezone: str = "Asia/Kolkata"
     scheduler_enabled: bool = True
     scheduler_interval_seconds: int = 30
+
+    # OpenF1 auto-answers. Free without an account (after each session); live needs a paid account.
+    openf1_enabled: bool = True
+    openf1_base_url: str = "https://api.openf1.org/v1"
+    openf1_token_url: str = "https://api.openf1.org/token"
+    openf1_username: str = ""
+    openf1_password: str = ""
+    openf1_live_interval_seconds: int = 20  # during the race, with a paid account
+    openf1_final_interval_seconds: int = 120  # waiting for the official classification
+    openf1_followup_hours: int = 6  # keep re-checking after the flag (post-race penalties)
 
     @property
     def frontend_origin_list(self) -> list[str]:

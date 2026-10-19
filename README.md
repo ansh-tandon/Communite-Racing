@@ -177,6 +177,8 @@ uvicorn app.main:app --reload         # http://localhost:8000
 - API docs: http://localhost:8000/docs
 - While `RESEND_API_KEY` is empty, login codes print in the server log instead of being emailed.
 - Emails listed in `ADMIN_EMAILS` become admins when they sign in.
+- "Continue with Google" needs `GOOGLE_CLIENT_ID` here and `VITE_GOOGLE_CLIENT_ID` in the frontend. The page's origin
+  (e.g. `http://localhost:5173`) must be listed under the client's Authorized JavaScript origins in Google Cloud.
 
 ### Frontend against the real backend
 
@@ -196,10 +198,15 @@ Then restart `npm run dev`.
 | backend | `JWT_SECRET` | Long random string that signs sessions |
 | backend | `ADMIN_EMAILS` | Comma-separated emails that become admins |
 | backend | `RESEND_API_KEY`, `EMAIL_FROM` | Sends login codes via Resend; empty = print to log |
+| backend | `EMAIL_LOGO_URL` | Public URL of the logo in the login email; empty = name in text |
+| backend | `GOOGLE_CLIENT_ID` | OAuth web client ID for "Continue with Google"; empty = switched off |
 | backend | `FRONTEND_ORIGIN` | Web app URL(s) allowed to call the API, comma-separated |
 | backend | `SENTRY_DSN` | Optional error reporting |
+| backend | `OPENF1_USERNAME`, `OPENF1_PASSWORD` | Paid OpenF1 account: results fill in **live** during the race. Empty = after the race |
+| backend | `OPENF1_LIVE_INTERVAL_SECONDS` | How often to read OpenF1 during a race (default 20) |
 | frontend | `VITE_API_URL` | API base URL, baked in at build time |
 | frontend | `VITE_DEMO` | `true` = run on in-browser sample data |
+| frontend | `VITE_GOOGLE_CLIENT_ID` | Same client ID as the backend; empty = no Google button |
 
 Templates: [`backend/.env.example`](backend/.env.example), [`frontend/.env.example`](frontend/.env.example).
 Never commit `.env` or `.env.local`; both are git-ignored.
@@ -259,25 +266,83 @@ Add `"scoring": "all"` to Pick several / Put in order for all-or-nothing points;
 | Publish results held for review | admin | `POST /admin/races/{id}/publish` |
 | A penalty changed the result | admin | `POST /admin/races/{id}/rescore` |
 | Race results and season standings | player | `GET /races/{id}/leaderboard`, `GET /standings` |
+| Fill results from OpenF1 now (or preview with `"save": false`) | admin | `POST /admin/races/{id}/openf1/sync` |
+| Which OpenF1 session a race uses | admin | `POST /admin/races/{id}/openf1/link`, `GET /admin/races/{id}/openf1` |
+| Any OpenF1 API, filters passed through | admin | `GET /admin/openf1/data/{endpoint}?…` |
+
+### Automatic results from OpenF1
+
+Questions can be answered automatically from [OpenF1](https://openf1.org). Give a question an
+**Auto-answer** rule (in `/admin` → Questions, or `"auto"` in the API) and the backend fills its result:
+
+| Phase | Without an account (free) | With a paid OpenF1 account |
+|---|---|---|
+| During the race | Nothing (OpenF1 locks live sessions) | Every ~20 s, saved as **live / provisional** |
+| After the flag | Within minutes of the official classification | Same |
+| Next 6 hours | Re-checked every 10 min for penalties | Same |
+
+- Live values are the race so far (current leader, safety cars so far…). A race **can't be scored** while any result is
+  still provisional; the official classification replaces them automatically.
+- A result you type in yourself is **never overwritten** by OpenF1.
+- You still press **Score**. The race's OpenF1 session is found automatically from the season and quiz deadline.
+- Rules: `GET /admin/openf1/rules`. Common ones:
+
+| Question | type | auto |
+|---|---|---|
+| Who wins? | Pick one | `{"rule": "winner"}` |
+| Who takes pole? | Pick one | `{"rule": "pole"}` |
+| Predict the podium | Put in order (pick 3) | `{"rule": "top", "n": 3}` |
+| 3 drivers in the top 10 after lap 10 | Pick several | `{"rule": "top_after_lap", "lap": 10, "n": 10}` |
+| Fastest lap? | Pick one | `{"rule": "fastest_lap"}` |
+| Will there be a safety car? | Yes / no | `{"rule": "safety_car"}` (add `"include_vsc": true` to count a VSC) |
+| How many cars pit under the safety car? | Number | `{"rule": "pit_stops_under_sc"}` |
+| How many retirements? | Number | `{"rule": "retirements"}` |
+| Will both Ferraris finish on the podium? | Yes / no | `{"rule": "team_both_in_top", "team": "Ferrari", "n": 3}` |
+| Red flag? / Rain? | Yes / no | `{"rule": "red_flag"}` / `{"rule": "rain"}` |
+
+Not available from OpenF1 (enter by hand): Driver of the Day, and anything about stewards' decisions.
 
 ## Deploying to Render
 
-Not deployed yet. When it's time, [`render.yaml`](render.yaml) sets up three things in one go:
+Live address: **https://communitieracing.in** (API: **https://api.communitieracing.in**).
+[`render.yaml`](render.yaml) sets up everything in one go:
 
-| Service | Type | Build | Start |
-|---|---|---|---|
-| `crql-db` | PostgreSQL | | |
-| `crql-api` | Python web service (`backend/`) | `pip install -r requirements.txt` | `alembic upgrade head && uvicorn …` |
-| `crql` | Static site (`frontend/`) | `npm ci && npm run build` | serves `dist/`, every path falls back to `index.html` |
+| Service | Type | Build | Start | Address |
+|---|---|---|---|---|
+| `crql-db` | PostgreSQL | | | private |
+| `crql-api` | Python web service (`backend/`) | `pip install -r requirements.txt` | `alembic upgrade head && uvicorn …` | api.communitieracing.in |
+| `crql` | Static site (`frontend/`) | `npm ci && npm run build` | serves `dist/` (single-page app) | communitieracing.in, www → redirects |
 
-1. Render dashboard → **New → Blueprint** → choose this repository.
-2. Fill in the values it asks for: `ADMIN_EMAILS`, and `RESEND_API_KEY` if emails should go out.
-3. After the first deploy, check the two URLs Render assigned. If they aren't
-   `https://crql-api.onrender.com` and `https://crql.onrender.com`, update `VITE_API_URL` on `crql`
-   and `FRONTEND_ORIGIN` on `crql-api`, then redeploy both.
+1. Render dashboard → **New → Blueprint** → choose this repository. Fill in what it asks for:
+   `ADMIN_EMAILS` (comma-separated), `RESEND_API_KEY`, `GOOGLE_CLIENT_ID` and `VITE_GOOGLE_CLIENT_ID`
+   (the same OAuth client ID). Leave `SENTRY_DSN` empty if unused. `JWT_SECRET` is generated.
+2. **DNS at Hostinger** (Domains → DNS / Nameservers). Render shows the exact values under each service →
+   Settings → Custom Domains; they are normally:
+
+   | Type | Name | Points to |
+   |---|---|---|
+   | A | `@` | `216.24.57.1` (replace the existing `@` A record) |
+   | CNAME | `www` | `crql.onrender.com` |
+   | CNAME | `api` | `crql-api.onrender.com` |
+
+   Remove any `AAAA` record on `@`. Keep the Resend records for `mail.communitieracing.in`. Then press **Verify**
+   on each domain in Render; HTTPS certificates are issued automatically.
+3. **Google Cloud Console** → OAuth client → Authorised JavaScript origins: add `https://communitieracing.in`
+   and `https://www.communitieracing.in`.
+4. **Resend** → Domains: `mail.communitieracing.in` must be *Verified*, or codes only reach the Resend account owner.
+5. **Load the season** from your computer, using `crql-db`'s *External Database URL*:
+
+   ```bash
+   cd backend
+   DATABASE_URL="<external database URL>" .venv/Scripts/python.exe -m app.seed
+   ```
+
+Every push to `main` redeploys. If Render named a service differently (e.g. `crql-api-x1y2`), point the CNAMEs at
+those names instead.
 
 On the free plan the API sleeps after 15 idle minutes (the first request then takes about a minute), and free Postgres
-expires after 30 days. Answers still lock on time while it sleeps, because the deadline is checked on every save.
+is deleted after 30 days: upgrade the database before real players join. Answers still lock on time while the API
+sleeps, because the deadline is checked on every save.
 
 ## Credits
 
