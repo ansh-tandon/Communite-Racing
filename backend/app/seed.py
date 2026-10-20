@@ -1,8 +1,8 @@
 """Fill the database with the rest of the 2026 season, optionally with sample players.
 
-    python -m app.seed                     rounds 15-23: questions (answered by OpenF1), quizzes open
-    python -m app.seed --sample-players    + 40 sample players with answers; races already run are
-                                           scored from the real OpenF1 results and published
+    python -m app.seed                     the rounds still to come: questions (answered by OpenF1), quizzes open
+    python -m app.seed --sample-players 30 rounds 15-23 + 30 sample players (default 40, max 40) with
+                                           answers; races already run are scored from the real OpenF1 results
     python -m app.seed --remove-sample-players
 
 Each quiz opens a week before lights out and locks at lights out, so finished races show results,
@@ -88,11 +88,16 @@ def sample_answer(rng: random.Random, q: Question):
     return rng.sample(q.options[:12], 3)
 
 
-async def add_races() -> list[int]:
-    """Create the missing rounds and open their quizzes. Returns the new race ids."""
+async def add_races(include_finished: bool) -> list[int]:
+    """Create the missing rounds and open their quizzes. Returns the new race ids.
+
+    Races already run are only added with sample players: for real players they'd be empty quizzes."""
     created = []
     async with SessionLocal() as s:
         for rnd, name, circuit, country, start in CALENDAR:
+            if not include_finished and datetime.fromisoformat(start) < utcnow():
+                print(f"  R{rnd} {name}: already run, skipped")
+                continue
             if await s.scalar(select(Race.id).where(Race.season == SEASON, Race.round == rnd)):
                 print(f"  R{rnd} {name}: already there, left alone")
                 continue
@@ -110,12 +115,12 @@ async def add_races() -> list[int]:
     return created
 
 
-async def add_sample_players(race_ids: list[int]) -> None:
+async def add_sample_players(race_ids: list[int], count: int) -> None:
     rng = random.Random(7)
     now = utcnow()
     async with SessionLocal() as s:
         await s.execute(insert(User).values([
-            {"email": SAMPLE_EMAIL.format(i), "display_name": n} for i, n in enumerate(SAMPLE_NAMES, start=1)
+            {"email": SAMPLE_EMAIL.format(i), "display_name": n} for i, n in enumerate(SAMPLE_NAMES[:count], start=1)
         ]).on_conflict_do_nothing(index_elements=["email"]))
         players = (await s.scalars(select(User.id).where(User.email.like(SAMPLE_LIKE)).order_by(User.id))).all()
         await s.commit()
@@ -173,7 +178,8 @@ async def remove_sample_players() -> None:
 
 async def main() -> None:
     p = argparse.ArgumentParser(description="Fill the database with the 2026 season.")
-    p.add_argument("--sample-players", action="store_true", help="add 40 sample players, answers and results")
+    p.add_argument("--sample-players", type=int, nargs="?", const=40, default=0, metavar="N",
+                   help="add N sample players (default 40, max 40) with answers and results")
     p.add_argument("--remove-sample-players", action="store_true", help="delete the sample players")
     args = p.parse_args()
     try:
@@ -181,10 +187,10 @@ async def main() -> None:
             await remove_sample_players()
             return
         print("Races:")
-        created = await add_races()
+        created = await add_races(include_finished=args.sample_players > 0)
         if args.sample_players and created:
             print("Sample players:")
-            await add_sample_players(created)
+            await add_sample_players(created, min(args.sample_players, len(SAMPLE_NAMES)))
             print("Finished races:")
             await score_finished(created)
         elif args.sample_players:

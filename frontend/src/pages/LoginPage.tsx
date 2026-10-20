@@ -21,14 +21,17 @@ const BG_VIDEO = 'https://media.giphy.com/media/UzvlLpSulVBn7ZIucS/giphy.mp4';
 const BG_STILL = 'https://media.giphy.com/media/UzvlLpSulVBn7ZIucS/giphy_s.gif';
 
 /**
- * The race footage behind the whole page: greyscale and low in the mix over near-black,
- * so it reads as texture, not a picture, and the palette stays neutral with red accents.
- * A still frame instead under reduced motion or data saver.
+ * The race footage behind the whole page, in its own colours, low in the mix over near-black
+ * so the text side stays readable. A still frame instead under reduced motion or data saver.
  */
 function Backdrop() {
-  const [still, setStill] = useState(() =>
+  // Still by choice: reduced motion or data saver. The video is never loaded.
+  const [still] = useState(() =>
     matchMedia('(prefers-reduced-motion: reduce)').matches
     || (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true);
+  // Still because the browser refused to autoplay (iOS Low Power Mode): the still frame covers
+  // the video until the first tap, when iOS lets it start.
+  const [blocked, setBlocked] = useState(false);
   const video = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const v = video.current;
@@ -39,33 +42,41 @@ function Backdrop() {
     v.defaultMuted = true;
     v.setAttribute('muted', '');
     v.setAttribute('playsinline', '');
-    // iOS can still refuse (Low Power Mode): then the still frame stands in, never a play button
-    const play = () => { if (!document.hidden) v.play().catch(() => setStill(true)); };
+    const play = () => {
+      if (!document.hidden) v.play().then(() => setBlocked(false), () => setBlocked(true));
+    };
     play();
     // Safari doesn't always honour `loop` on this clip: it stops on frame 0 after the first pass.
-    // Whenever it stops on its own (or the tab comes back), start it again.
+    // Whenever it stops on its own, the tab comes back, or the player touches the page, start it again.
     v.addEventListener('ended', play);
     v.addEventListener('pause', play);
     document.addEventListener('visibilitychange', play);
+    document.addEventListener('touchstart', play, { passive: true });
+    document.addEventListener('pointerdown', play);
     return () => {
       v.removeEventListener('ended', play);
       v.removeEventListener('pause', play);
       document.removeEventListener('visibilitychange', play);
+      document.removeEventListener('touchstart', play);
+      document.removeEventListener('pointerdown', play);
     };
   }, []);
-  const look = 'h-full w-full object-cover opacity-[0.35] [filter:grayscale(1)_contrast(1.05)]';
+  const look = 'h-full w-full object-cover opacity-[0.7] [filter:brightness(1.1)_saturate(1.15)_contrast(1.05)]';
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-bg">
       {still ? <img src={BG_STILL} alt="" className={look} /> : (
-        <video ref={video} src={BG_VIDEO} poster={BG_STILL} autoPlay muted loop playsInline preload="auto" controls={false}
-          disablePictureInPicture disableRemotePlayback tabIndex={-1}
-          className={cx(look, '[&::-webkit-media-controls-start-playback-button]:hidden [&::-webkit-media-controls]:hidden')}
-          // the source is a 2.6 s loop; a touch slower reads as cinematic rather than frantic
-          onLoadedMetadata={(e) => { e.currentTarget.playbackRate = 0.7; }} />
+        <>
+          <video ref={video} src={BG_VIDEO} poster={BG_STILL} autoPlay muted loop playsInline preload="auto" controls={false}
+            disablePictureInPicture disableRemotePlayback tabIndex={-1}
+            className={cx(look, '[&::-webkit-media-controls-start-playback-button]:hidden [&::-webkit-media-controls]:hidden')}
+            // the source is a 2.6 s loop; a touch slower reads as cinematic rather than frantic
+            onLoadedMetadata={(e) => { e.currentTarget.playbackRate = 0.7; }} />
+          {blocked && <img src={BG_STILL} alt="" className={cx(look, 'absolute inset-0')} />}
+        </>
       )}
       {/* neutral shading only: the edges fall to near-black, and the text side is darker still */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_65%_45%,rgba(11,13,16,0.15)_0%,rgba(11,13,16,0.7)_60%,rgba(11,13,16,0.95)_100%)]" />
-      <div className="absolute inset-0 bg-gradient-to-b from-[rgba(11,13,16,0.3)] via-[rgba(11,13,16,0.55)] to-[rgba(11,13,16,0.92)] lg:bg-gradient-to-r lg:from-[rgba(11,13,16,0.92)] lg:via-[rgba(11,13,16,0.55)] lg:to-[rgba(11,13,16,0.15)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_65%_45%,rgba(11,13,16,0)_0%,rgba(11,13,16,0.45)_65%,rgba(11,13,16,0.85)_100%)]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[rgba(11,13,16,0.15)] via-[rgba(11,13,16,0.4)] to-[rgba(11,13,16,0.9)] lg:bg-gradient-to-r lg:from-[rgba(11,13,16,0.88)] lg:via-[rgba(11,13,16,0.35)] lg:to-[rgba(11,13,16,0)]" />
     </div>
   );
 }
