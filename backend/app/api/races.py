@@ -6,6 +6,7 @@ from sqlalchemy import func, select
 from app.core.deps import CurrentUser, Session
 from app.models import Answer, Question, Race, Score, Submission
 from app.schemas import (
+    LiveLeaderboard,
     AnswersIn,
     AnswersOut,
     MyResults,
@@ -16,7 +17,7 @@ from app.schemas import (
     SeasonStandings,
 )
 from app.services.races import my_answers, questions_by_id, save_answers
-from app.services.results import answer_key, entry_count, race_leaderboard, rules, season_standings
+from app.services.results import answer_key, entry_count, live_leaderboard, race_leaderboard, rules, season_standings
 from app.services.scoring import max_points, score_answer
 
 router = APIRouter(tags=["quiz"])
@@ -111,6 +112,16 @@ async def leaderboard(race_id: int, user: CurrentUser, s: Session) -> RaceLeader
     if race.published_at is None and not (user.is_admin and race.status == "scored"):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Results aren't published yet.")
     return RaceLeaderboard(race_id=race_id, published=race.published_at is not None, rows=await race_leaderboard(s, race_id))
+
+
+@router.get("/races/{race_id}/live")
+async def live(race_id: int, user: CurrentUser, s: Session) -> LiveLeaderboard:
+    """Provisional standings once the quiz locks, until results are published. Poll it: nothing is stored."""
+    race = await visible_race(s, race_id, user)
+    p = phase(race, await s.scalar(select(func.now())))
+    if p != "closed":
+        raise HTTPException(status.HTTP_409_CONFLICT, "Live standings run between the lock and published results.")
+    return LiveLeaderboard(**await live_leaderboard(s, race))
 
 
 @router.get("/standings")

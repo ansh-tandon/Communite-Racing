@@ -82,6 +82,27 @@ export interface RaceLeaderboard {
   rows: LeaderRow[];
 }
 
+/** GET /races/{id}/live: provisional, between the lock and published results. */
+export interface LiveSeasonRow {
+  rank: number;
+  user_id: number;
+  name: string;
+  points: number;
+  race_points: number | null;
+  prev_rank: number | null;
+}
+
+export interface LiveLeaderboard {
+  race_id: number;
+  season: number;
+  questions: number;
+  results_in: number;
+  live_results: number;
+  updated_at: string | null;
+  rows: LeaderRow[];
+  season_rows: LiveSeasonRow[];
+}
+
 export interface SeasonRow {
   rank: number;
   user_id: number;

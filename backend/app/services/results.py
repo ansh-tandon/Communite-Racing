@@ -166,17 +166,7 @@ async def score_race(
             raise ActionError(f"{', '.join(live)} still show live (provisional) OpenF1 results. "
                               "Wait for the official classification or enter them by hand.")
 
-        entries: dict[int, dict[int, Any]] = {
-            uid: {} for uid in (await s.scalars(select(Submission.user_id).where(Submission.race_id == race_id))).all()
-        }
-        rows = await s.execute(
-            select(Submission.user_id, Answer.question_id, Answer.value)
-            .join(Answer, Answer.submission_id == Submission.id)
-            .where(Submission.race_id == race_id)
-        )
-        for uid, qid, v in rows:
-            entries[uid][qid] = v
-
+        entries = await race_entries(s, race_id)
         qrules = rules(questions)
         results = compute_scores(qrules, key, entries)
         await _store(s, race_id, results)
@@ -196,6 +186,59 @@ async def score_race(
         "max_points": max_points(qrules),
         "published": race.published_at is not None,
         "rescored": rescore,
+    }
+
+
+async def race_entries(s: AsyncSession, race_id: int) -> dict[int, dict[int, Any]]:
+    """{user_id: {question_id: value}} for everyone who entered, even with no answers."""
+    entries: dict[int, dict[int, Any]] = {
+        uid: {} for uid in (await s.scalars(select(Submission.user_id).where(Submission.race_id == race_id))).all()
+    }
+    rows = await s.execute(
+        select(Submission.user_id, Answer.question_id, Answer.value)
+        .join(Answer, Answer.submission_id == Submission.id)
+        .where(Submission.race_id == race_id)
+    )
+    for uid, qid, v in rows:
+        entries[uid][qid] = v
+    return entries
+
+
+async def live_leaderboard(s: AsyncSession, race: Race) -> dict:
+    """Provisional standings for a locked quiz, scored on the fly from whatever results are in so far
+    (live OpenF1 values, final ones, or typed in). Nothing is stored; questions without a result score 0.
+    Season rows add these provisional points to the published standings."""
+    questions = await questions_by_id(s, race.id)
+    key = await answer_key(s, race.id)
+    sources = await answer_key_sources(s, race.id)
+    results = compute_scores(rules(questions), key, await race_entries(s, race.id))
+    names = dict((await s.execute(select(User.id, display_name()).where(User.id.in_([r.user_id for r in results])))).all())
+    updated = await s.scalar(select(func.max(AnswerKey.entered_at)).where(AnswerKey.race_id == race.id))
+
+    season = {r["user_id"]: r for r in await season_standings(s, race.season)}
+    race_points = {r.user_id: r.points for r in results}
+    combined = [
+        {"user_id": uid, "name": season[uid]["name"] if uid in season else names.get(uid, f"Player {uid}"),
+         "points": (season[uid]["points"] if uid in season else 0) + race_points.get(uid, 0),
+         "race_points": race_points.get(uid), "prev_rank": season[uid]["rank"] if uid in season else None}
+        for uid in season.keys() | race_points.keys()
+    ]
+    combined.sort(key=lambda r: (-r["points"], r["user_id"]))
+    prev, rank = None, 0
+    for i, r in enumerate(combined, start=1):
+        rank = rank if r["points"] == prev else i
+        r["rank"], prev = rank, r["points"]
+
+    return {
+        "race_id": race.id,
+        "season": race.season,
+        "questions": len(questions),
+        "results_in": len(key),
+        "live_results": sum(1 for src in sources.values() if src == LIVE_SOURCE),
+        "updated_at": updated,
+        "rows": [{"rank": r.rank, "user_id": r.user_id, "name": names.get(r.user_id, f"Player {r.user_id}"),
+                  "points": r.points, "correct_count": r.correct_count} for r in results],
+        "season_rows": combined,
     }
 
 

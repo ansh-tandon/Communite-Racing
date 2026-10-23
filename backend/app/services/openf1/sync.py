@@ -65,8 +65,9 @@ def _t(s: str) -> datetime:
 
 
 async def find_session(client: OpenF1Client, race: Race) -> dict | None:
-    """The OpenF1 race session closest to this quiz's deadline (lights out), within 4 days."""
-    sessions = [x for x in await client.sessions(year=race.season, session_name="Race") if not x.get("is_cancelled")]
+    """The OpenF1 session (of any kind) that starts closest to this quiz's deadline, within 4 days: a race quiz
+    locks at lights out, so it finds the race; a quiz on FP1 or qualifying finds that session instead."""
+    sessions = [x for x in await client.sessions(year=race.season) if not x.get("is_cancelled")]
     if not sessions:
         return None
     best = min(sessions, key=lambda x: abs(_t(x["date_start"]) - race.quiz_closes_at))

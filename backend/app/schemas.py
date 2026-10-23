@@ -123,6 +123,26 @@ class RaceLeaderboard(BaseModel):
     rows: list[LeaderRow]
 
 
+class LiveSeasonRow(BaseModel):
+    rank: int
+    user_id: int
+    name: str
+    points: int  # published season total + this quiz's provisional points
+    race_points: int | None  # this quiz, provisional; None = didn't enter
+    prev_rank: int | None  # place in the published standings; None = not in them yet
+
+
+class LiveLeaderboard(BaseModel):
+    race_id: int
+    season: int
+    questions: int
+    results_in: int  # questions with a result so far
+    live_results: int  # of those, provisional OpenF1 values that can still change
+    updated_at: datetime | None
+    rows: list[LeaderRow]
+    season_rows: list[LiveSeasonRow]
+
+
 class SeasonRow(BaseModel):
     rank: int
     user_id: int

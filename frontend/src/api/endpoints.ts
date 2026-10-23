@@ -2,7 +2,7 @@
 // anything the backend doesn't serve yet is listed in BACKEND_GAPS.md instead.
 import { api } from './client';
 import type {
-  AdminRace, AdminRaceDetail, AnswerValue, RaceDetail, RaceIn, RaceLeaderboard,
+  AdminRace, AdminRaceDetail, AnswerValue, LiveLeaderboard, RaceDetail, RaceIn, RaceLeaderboard,
   RaceSummary, ScoreSummary, SeasonStandings, TokenOut, User,
 } from './types';
 
@@ -22,6 +22,8 @@ export const races = {
   saveAnswers: (id: number, answers: Record<number, AnswerValue | null>) =>
     api<{ answers: Record<string, AnswerValue> }>(`/races/${id}/answers`, { method: 'PUT', body: { answers } }),
   leaderboard: (id: number) => api<RaceLeaderboard>(`/races/${id}/leaderboard`),
+  /** Provisional standings between the lock and published results. */
+  live: (id: number) => api<LiveLeaderboard>(`/races/${id}/live`),
 };
 
 export const standings = {
