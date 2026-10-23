@@ -310,6 +310,19 @@ async def _fastest_pit_lane(d: RaceData, p: dict) -> int:
     return min(stops, key=lambda x: x.get("lane_duration") or x["pit_duration"])["driver_number"]
 
 
+@rule("most_laps", "Most laps completed (practice)", "driver", final_only=True)
+async def _most_laps(d: RaceData, p: dict) -> int:
+    d.need_final()
+    laps = {r["driver_number"]: r.get("number_of_laps") or 0 for r in await d.result()}
+    if not laps:
+        raise NoValue("No classification yet.")
+    best = max(laps.values())
+    top = [n for n, k in laps.items() if k == best]
+    if len(top) > 1:
+        raise NoValue(f"Tie: {len(top)} drivers did {best} laps. Enter it by hand.")
+    return top[0]
+
+
 # Pick one: a team
 
 @rule("winning_team", "Winning team", "team")
@@ -415,6 +428,12 @@ async def _finishing_position(d: RaceData, p: dict) -> int:
     if n not in order:
         raise NoValue(f"{p['driver']} isn't classified.")
     return order.index(n) + 1
+
+
+@rule("total_laps", "Laps completed by all cars together (practice)", "number", final_only=True)
+async def _total_laps(d: RaceData, p: dict) -> int:
+    d.need_final()
+    return sum(r.get("number_of_laps") or 0 for r in await d.result())
 
 
 @rule("winning_margin", "Winning margin in seconds (rounded)", "number", final_only=True)

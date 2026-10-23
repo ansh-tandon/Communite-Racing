@@ -15,16 +15,19 @@ from app.services.openf1.client import OpenF1Client
 FIXTURES = Path(__file__).parent / "fixtures" / "openf1"
 SINGAPORE_RACE = 11388  # 2026 Singapore GP, 11 Oct: VER wins from pole, two VSCs, four DNFs
 SINGAPORE_START = datetime.fromisoformat("2026-10-11T12:00:00+00:00")
+SINGAPORE_FP1 = 11378  # 2026 Singapore FP1, 9 Oct: RUS fastest from LEC, no red flag
 
 
 class FakeOpenF1:
-    def __init__(self, folder: str = "singapore_2026", cutoff: datetime | None = None, locked: bool = False):
+    def __init__(self, folder: str = "singapore_2026", cutoff: datetime | None = None, locked: bool = False,
+                 session: str = "Race"):
         self.dir = FIXTURES / folder
         self.cutoff, self.locked = cutoff, locked
         self.urls: list[str] = []
         self.sessions = self._load("sessions")
-        self.race_key = next(x["session_key"] for x in self.sessions if x["session_name"] == "Race")
-        self.quali_key = next(x["session_key"] for x in self.sessions if x["session_name"] == "Qualifying")
+        # the session the quiz is about (a race, or e.g. "Practice 1"), and the weekend's qualifying if recorded
+        self.race_key = next(x["session_key"] for x in self.sessions if x["session_name"] == session)
+        self.quali_key = next((x["session_key"] for x in self.sessions if x["session_name"] == "Qualifying"), None)
 
     def _load(self, name: str) -> list[dict]:
         f = self.dir / f"{name}.json"
