@@ -92,3 +92,13 @@ async def test_a_practice_quiz_links_itself_to_the_practice_session(make_race, c
     await lock_at(race["id"], fp1_start + timedelta(minutes=30))
     rep = (await client.post(f"/admin/races/{race['id']}/openf1/sync", headers=admin, json={})).json()
     assert rep["session_key"] == SINGAPORE_FP1 == fake.race_key and rep["phase"] == "final"
+
+
+async def test_questions_answered_by_hand_dont_break_the_sync(make_race, client, admin, use_openf1):
+    use_openf1(FakeOpenF1())
+    hand = {"prompt": "Most laps?", "type": "single", "weight": 5, "options": ["VER", "LEC"], "config": {"penalty": 1}, "auto": None}
+    race = await make_race(questions=[QS[0], hand])
+    await lock_at(race["id"])
+    r = await client.post(f"/admin/races/{race['id']}/openf1/sync", headers=admin, json={})
+    assert r.status_code == 200, r.text
+    assert [q["sequence"] for q in r.json()["questions"]] == [1]  # only the auto-answered question is read

@@ -109,7 +109,7 @@ class Question(Base):
     config: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, server_default="{}")
     # How OpenF1 answers it, e.g. {"rule": "winner"}. None = the admin enters the result by hand.
     # See services/openf1/rules.py. Not part of scoring, so it can change after the quiz opens.
-    auto: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    auto: Mapped[dict[str, Any] | None] = mapped_column(JSONB(none_as_null=True))  # None = SQL NULL, not JSON null
 
     race: Mapped[Race] = relationship(back_populates="questions")
 

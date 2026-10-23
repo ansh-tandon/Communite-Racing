@@ -111,9 +111,10 @@ async def sync_race(
         raise ActionError("Race not found.", 404)
     if save:
         check_auto_allowed(race)
-    questions = (await s.scalars(
+    # A question answered by hand can hold JSON null rather than SQL NULL, so check the value too.
+    questions = [q for q in (await s.scalars(
         select(Question).where(Question.race_id == race_id, Question.auto.is_not(None)).order_by(Question.sequence)
-    )).all()
+    )).all() if q.auto]
     if not questions:
         raise ActionError("No question in this race has an auto-answer rule.")
 
