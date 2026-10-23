@@ -8,6 +8,7 @@ Rules today:
                     ("pick 3 in the top 10": all 3 inside the top 10 is full marks)
   ranked            per_item: weight x (right driver in the right slot / slots); all: full weight or 0
 Partial points round down. Equal points share a rank (1, 2, 2, 4).
+Negative marking: config.penalty (e.g. 1) is taken off for an answer that earns nothing; a blank answer scores 0.
 """
 
 from collections.abc import Iterable, Mapping
@@ -35,6 +36,11 @@ class ScoreResult:
 def score_answer(q: QuestionRule, given: Any, key: Any) -> int:
     if given is None or key is None:
         return 0
+    earned = _earned(q, given, key)
+    return earned if earned > 0 else -int(q.config.get("penalty", 0))
+
+
+def _earned(q: QuestionRule, given: Any, key: Any) -> int:
     w, cfg = q.weight, q.config
 
     if q.type in ("single", "yes_no"):

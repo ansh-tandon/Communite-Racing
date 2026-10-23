@@ -7,7 +7,8 @@ Question types:
   number   a whole number                       answer 3                     e.g. "How many cars pit under the safety car?"
   yes_no   true / false                         answer true                  e.g. "Will both Ferraris finish on the podium?"
 
-config keys: pick (multi, ranked), min / max / tolerance (number), scoring "per_item" | "all" (multi, ranked).
+config keys: pick (multi, ranked), min / max / tolerance (number), scoring "per_item" | "all" (multi, ranked),
+penalty (any type: points taken off for a wrong answer).
 """
 
 from typing import Any
@@ -56,6 +57,9 @@ def validate_question(type_: str, options: Any, config: Any) -> None:
             raise Invalid(f'Config needs "pick": how many to choose, between 1 and {len(options)}.')
         if config.get("scoring", "per_item") not in ("per_item", "all"):
             raise Invalid('Config "scoring" must be "per_item" or "all".')
+
+    if "penalty" in config and (not _is_int(config["penalty"]) or config["penalty"] < 0):
+        raise Invalid('Config "penalty" must be a whole number, 0 or more.')
 
     if type_ == "number":
         for k in ("min", "max", "tolerance"):

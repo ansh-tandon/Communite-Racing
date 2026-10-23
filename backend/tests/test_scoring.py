@@ -121,3 +121,39 @@ def test_answer_shapes():
         validate_value("number", [], {"min": 0, "max": 20}, 21)
     with pytest.raises(Invalid):
         validate_value("yes_no", [], {}, "yes")
+
+
+# ---------- negative marking: +5 right, -1 wrong, 0 blank ----------
+
+NEG = [QuestionRule(11, "single", 5, {"penalty": 1}),
+       QuestionRule(12, "ranked", 5, {"penalty": 1, "pick": 3, "scoring": "all"}),
+       QuestionRule(13, "number", 5, {"penalty": 1, "tolerance": 15}),
+       QuestionRule(14, "yes_no", 5, {"penalty": 1})]
+NEG_KEY = {11: "RUS", 12: ["RUS", "LEC", "NOR"], 13: 568, 14: False}
+
+
+def test_wrong_answers_cost_the_penalty_blanks_cost_nothing():
+    assert [score_answer(q, v, NEG_KEY[q.id]) for q, v in zip(NEG, ("RUS", ["RUS", "LEC", "NOR"], 560, False))] == [5, 5, 5, 5]
+    assert [score_answer(q, v, NEG_KEY[q.id]) for q, v in zip(NEG, ("NOR", ["RUS", "NOR", "LEC"], 600, True))] == [-1, -1, -1, -1]
+    assert [score_answer(q, None, NEG_KEY[q.id]) for q in NEG] == [0, 0, 0, 0]
+
+
+def test_negative_totals_rank_last():
+    out = compute_scores(NEG, NEG_KEY, {
+        1: {11: "RUS", 12: ["RUS", "LEC", "NOR"], 13: 600, 14: True},  # 5 + 5 - 1 - 1 = 8
+        2: {11: "NOR", 12: ["NOR", "LEC", "RUS"], 13: 300, 14: True},  # all wrong: -4
+        3: {},                                                           # nothing answered: 0
+    })
+    assert [(r.user_id, r.points, r.rank, r.correct_count) for r in out] == [(1, 8, 1, 2), (3, 0, 2, 0), (2, -4, 3, 0)]
+
+
+def test_partial_credit_is_never_penalised():
+    q = QuestionRule(15, "ranked", 6, {"penalty": 1, "pick": 3})
+    assert score_answer(q, ["RUS", "NOR", "LEC"], ["RUS", "LEC", "NOR"]) == 2
+
+
+def test_penalty_must_be_a_non_negative_whole_number():
+    validate_question("single", ["A", "B"], {"penalty": 1})
+    for bad in (-1, 1.5, "1", True):
+        with pytest.raises(Invalid, match="penalty"):
+            validate_question("single", ["A", "B"], {"penalty": bad})

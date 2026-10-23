@@ -87,7 +87,7 @@ function Segments({ questions, answers, current, onJump, results }: {
             className="group flex h-11 flex-1 items-center">
             <span className={cx('block w-full rounded-full transition-all duration-300',
               here ? 'h-1.5' : 'h-[3px] group-hover:h-1',
-              results ? (pts === q.weight ? 'bg-ok' : pts ? 'bg-warn' : 'bg-surface3') : done ? 'bg-accent' : here ? 'bg-ink/80' : 'bg-surface3')} />
+              results ? (pts === q.weight ? 'bg-ok' : (pts ?? 0) > 0 ? 'bg-warn' : 'bg-surface3') : done ? 'bg-accent' : here ? 'bg-ink/80' : 'bg-surface3')} />
           </button>
         );
       })}
@@ -97,7 +97,7 @@ function Segments({ questions, answers, current, onJump, results }: {
 
 function ResultLine({ q, mine, key_, pts }: { q: Question; mine?: AnswerValue; key_?: AnswerValue; pts: number }) {
   return (
-    <div className={cx('mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-lg border p-4', pts === q.weight ? 'border-ok/40 bg-ok/[.07]' : pts ? 'border-warn/40 bg-warn/[.06]' : 'border-line bg-surface')}>
+    <div className={cx('mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-lg border p-4', pts === q.weight ? 'border-ok/40 bg-ok/[.07]' : pts > 0 ? 'border-warn/40 bg-warn/[.06]' : 'border-line bg-surface')}>
       <span className="text-sm"><span className="text-muted">You: </span><span className="font-semibold">{formatValue(q, mine)}</span></span>
       <span className="text-sm"><span className="text-muted">Result: </span><span className="font-semibold">{formatValue(q, key_)}</span></span>
       <span className="num ml-auto font-display text-2xl font-bold">{pts}<span className="text-base text-muted"> / {q.weight}</span></span>

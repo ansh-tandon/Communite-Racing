@@ -76,7 +76,7 @@ export function PredictionPass({ race, answers, player, editable, onEdit }: {
               <Pick q={q} v={v} />
             </span>
             {res ? (
-              <span className={cx('num shrink-0 self-center font-display text-lg font-bold', pts === q.weight ? 'text-ok' : pts ? 'text-warn' : 'text-faint')}>
+              <span className={cx('num shrink-0 self-center font-display text-lg font-bold', pts === q.weight ? 'text-ok' : (pts ?? 0) > 0 ? 'text-warn' : 'text-faint')}>
                 {pts ?? 0}<span className="text-sm text-faint">/{q.weight}</span>
               </span>
             ) : editable && <ChevronRight className="h-5 w-5 shrink-0 self-center text-faint" aria-hidden />}
