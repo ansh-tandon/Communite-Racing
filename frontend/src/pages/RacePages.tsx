@@ -116,10 +116,11 @@ function Results({ race }: { race: RaceDetail }) {
 }
 
 // Between the lock and published results: provisional points from the results known so far, re-read every 20 s.
-function LiveBoard({ race }: { race: RaceDetail }) {
+// Also on the Leaderboard page, opening on the season view.
+export function LiveBoard({ raceId, initialView = 'quiz' }: { raceId: number; initialView?: 'quiz' | 'season' }) {
   const { user } = useAuth();
-  const [view, setView] = useState<'quiz' | 'season'>('quiz');
-  const live = useLiveLeaderboard(race.id);
+  const [view, setView] = useState<'quiz' | 'season'>(initialView);
+  const live = useLiveLeaderboard(raceId);
   if (live.isPending) return <Skeleton className="h-72" />;
   if (live.isError) return <ErrorState error={live.error} onRetry={() => live.refetch()} />;
   const l = live.data;
@@ -133,7 +134,7 @@ function LiveBoard({ race }: { race: RaceDetail }) {
         <span className="text-sm text-muted">{l.results_in} of {l.questions} results in{l.live_results ? ` (${l.live_results} still live)` : ''}{l.updated_at ? ` · updated ${fmtTime(l.updated_at)}` : ''}</span>
       </div>
       <div className="flex gap-1" role="tablist" aria-label="Live standings">
-        {([['quiz', 'This quiz'], ['season', 'Season']] as const).map(([k, label]) => (
+        {([['quiz', 'This race'], ['season', 'Season']] as const).map(([k, label]) => (
           <button key={k} role="tab" aria-selected={view === k} onClick={() => setView(k)} className={cx('rounded-lg px-3 py-1.5 text-sm font-semibold', view === k ? 'bg-ink text-bg' : 'text-muted hover:bg-surface')}>{label}</button>
         ))}
       </div>
@@ -171,7 +172,7 @@ function LiveBoard({ race }: { race: RaceDetail }) {
 
 function RaceBoard({ race }: { race: RaceDetail }) {
   const { user } = useAuth();
-  if (race.phase === 'closed') return <LiveBoard race={race} />;
+  if (race.phase === 'closed') return <LiveBoard raceId={race.id} />;
   return <PublishedBoard race={race} user={user} />;
 }
 

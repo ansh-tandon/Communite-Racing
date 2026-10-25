@@ -11,8 +11,9 @@ export const keys = {
   adminRace: (id: number) => ['admin', 'race', id] as const,
 };
 
-export const useRaces = () => useQuery({ queryKey: keys.races, queryFn: () => races.list() });
-export const useRace = (id: number) => useQuery({ queryKey: keys.race(id), queryFn: () => races.detail(id), enabled: Number.isFinite(id) });
+// Re-read every minute so a quiz moving from open to locked (live standings) shows up without a reload.
+export const useRaces = () => useQuery({ queryKey: keys.races, queryFn: () => races.list(), refetchInterval: 60_000 });
+export const useRace = (id: number) => useQuery({ queryKey: keys.race(id), queryFn: () => races.detail(id), enabled: Number.isFinite(id), refetchInterval: 60_000 });
 export const useStandings = () => useQuery({ queryKey: keys.standings, queryFn: () => standings.season() });
 export const useRaceLeaderboard = (id: number, enabled = true) =>
   useQuery({ queryKey: keys.leaderboard(id), queryFn: () => races.leaderboard(id), enabled: enabled && Number.isFinite(id), retry: false });

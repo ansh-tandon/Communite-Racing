@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Crown, Flag, LogOut, Medal, Sparkles, Target, Trophy } from 'lucide-react';
+import { ArrowRight, Crown, Flag, LogOut, Medal, Radio, Sparkles, Target, Trophy } from 'lucide-react';
 import { auth } from '../api/endpoints';
 import { LeaderboardTable, rankMovement, TopThree } from '../components/leaderboard';
 import { Avatar, Button, EmptyState, ErrorState, SectionTitle, Skeleton, cx, useToast } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { useRaceLeaderboard, useRaces, useStandings } from '../hooks/queries';
 import { ordinal } from '../utils/format';
+import { LiveBoard } from './RacePages';
 
 // ---------- Leaderboard ----------
 export function LeaderboardPage() {
@@ -18,6 +19,8 @@ export function LeaderboardPage() {
   const scored = (races.data ?? []).filter((r) => r.phase === 'results' && r.season === s.data?.season);
   const latest = scored.reduce<(typeof scored)[number] | undefined>((a, r) => (!a || r.round > a.round ? r : a), undefined);
   const lastRound = useRaceLeaderboard(latest?.id ?? NaN, !!latest && scored.length > 1);
+  // a quiz that has locked but isn't published yet: its provisional standings go live at the top
+  const live = (races.data ?? []).filter((r) => r.phase === 'closed').sort((a, b) => b.quiz_closes_at.localeCompare(a.quiz_closes_at))[0];
   const movement = useMemo(
     () => (s.data && lastRound.data ? rankMovement(s.data.rows, lastRound.data.rows) : undefined),
     [s.data, lastRound.data],
@@ -32,6 +35,19 @@ export function LeaderboardPage() {
   const lead = rows[0]?.points ?? 0;
 
   return (
+    <div className="space-y-10">
+    {live && (
+      <section className="rounded-[24px] border border-ok/30 bg-surface p-5 sm:p-7" aria-label="Live standings">
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="sector flex items-center gap-2 text-ok"><Radio className="h-4 w-4" aria-hidden />Live now · Round {live.round}</p>
+            <h2 className="mt-1 font-display text-3xl font-black uppercase leading-none sm:text-4xl">{live.name}</h2>
+          </div>
+          <Link to={`/races/${live.id}?tab=leaderboard`} className="flex items-center gap-1 text-sm font-semibold text-muted hover:text-ink">Race page<ArrowRight className="h-4 w-4" aria-hidden /></Link>
+        </div>
+        <LiveBoard raceId={live.id} initialView="season" />
+      </section>
+    )}
     <div className="lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-12">
       <div className="space-y-6 lg:sticky lg:top-24">
         <header>
@@ -71,6 +87,7 @@ export function LeaderboardPage() {
           ? <EmptyState icon={Trophy} title="No standings yet" body="The table fills in after the first race of the season is scored." />
           : <LeaderboardTable rows={rows} meId={user?.id} movement={movement} round={latest?.round} />}
       </div>
+    </div>
     </div>
   );
 }
