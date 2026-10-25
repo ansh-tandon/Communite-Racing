@@ -236,6 +236,8 @@ alembic upgrade head
 
 ## Admin guide
 
+The complete runbook, from creating a quiz to publishing results, is in [docs/admin-guide.md](docs/admin-guide.md).
+
 Open `<API URL>/admin`, enter your email, press **Send code** and type the code. Only `ADMIN_EMAILS` get in.
 
 - **Races:** create a race. Times are typed and shown in IST (stored as UTC).
