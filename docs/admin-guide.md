@@ -174,14 +174,16 @@ number, and teams loosely ("Red Bull" matches "Red Bull Racing").
 | `pole` | Pole position | single | — | live + final |
 | `leader_after_lap` | Leader after lap N | single | `lap` | live + final |
 | `fastest_lap` | Fastest lap | single | — | live + final |
-| `most_places_gained` | Most places gained, grid to finish | single | — | after classification |
-| `first_retirement` | First driver to retire | single | — | after classification |
+| `most_places_gained` | Most places gained, grid to finish | single | — | live (grid vs current order) + final |
+| `first_retirement` | First driver to retire | single | — | live (first car to stop on track) + final |
 | `fastest_pit_lane` | Fastest pit lane time | single | — | live + final |
 | `most_laps` | Most laps (practice) | single | — | after classification |
 | `winning_team` | Winning (or fastest) team | single | — | live + final |
+| `top_scoring_team` | Constructor with the most points | single | — | live (points table on the running order) + final |
 | `top` | Top N (Pick several) / order (Put in order) | multi, ranked | `n` | live + final |
 | `top_after_lap` | Top N after lap L | multi, ranked | `lap`, `n` | live + final |
 | `qualifying_top` | Top N in qualifying | multi, ranked | `n` | live + final |
+| `climbers_into_top` | Drivers who started outside the top N and finish inside it (any counts) | multi | `n` (10) | live + final |
 | `retired_drivers` | Drivers who didn't finish | multi, ranked | — | after classification |
 | `safety_cars` | Safety car deployments | number | — | live + final |
 | `virtual_safety_cars` | VSC deployments | number | — | live + final |
@@ -190,11 +192,12 @@ number, and teams loosely ("Red Bull" matches "Red Bull Racing").
 | `pit_stops` | Pit stops, all cars | number | — | live + final |
 | `pit_stops_under_sc` | Pit stops under SC | number | `include_vsc` (true) | live + final |
 | `retirements` | Drivers who didn't finish | number | `include_dns` (true) | after classification |
-| `classified_finishers` | Classified finishers | number | — | after classification |
+| `classified_finishers` | Classified finishers | number | — | live (cars still running) + final |
 | `overtakes` | Overtakes (OpenF1 data may be incomplete) | number | — | live + final |
 | `lead_changes` | Lead changes | number | — | live + final |
 | `finishing_position` | A driver's position | number | `driver` | live + final |
 | `total_laps` | Laps by all cars (practice) | number | — | after classification |
+| `top_from_outside` | How many of the top N started outside it | number | `n` (3) | live + final |
 | `winning_margin` | Winning margin, seconds | number | — | after classification |
 | `max_track_temp` | Hottest track temperature, °C | number | — | live + final |
 | `safety_car` | Was there a safety car? | yes_no | `include_vsc` (false) | live + final |
@@ -224,6 +227,9 @@ Examples: `{"rule": "winner"}`, `{"rule": "top", "n": 3}`, `{"rule": "driver_in_
 - A result you type yourself (`manual`) is never overwritten.
 - A race can't be scored while any result is still **live**.
 - Ties (e.g. four drivers on the most laps) are never guessed: the question shows **no value** and you enter it.
+  If a live value was showing, the final sync clears it, so the question shows as missing.
+- A car counts as **stopped** live when it hasn't started a lap for 5 minutes while others have (a red flag stops
+  everyone, so nobody is flagged).
 - **Session link:** found automatically: the OpenF1 session (race, qualifying, practice) starting closest to the
   quiz's lock. Check it on the race page or with the snippet in section 7; to change it:
   `POST /admin/races/{id}/openf1/link` with `{"session_key": 11389}`, or the OpenF1 session field in the data panel.

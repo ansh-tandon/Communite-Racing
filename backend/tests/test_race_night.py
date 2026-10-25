@@ -81,11 +81,12 @@ async def test_race_night(make_race, client, admin, login):
     mid = await live(client, rid, bob)
     # VER leads, VER has the fastest lap so far, no red flag or SC, BEA is the only climber into the top 10,
     # nobody on the podium from outside the top 3. Unknown answers score 0 for now.
+    # Live too: BOR stopped first, Ferrari lead on points by the running order, 21 cars running; places gained tied.
     assert {r["name"]: r["points"] for r in mid["rows"]} == {
-        "Bob": -5 + 10 - 2 - 2 + 10 + 15,     # 26: fastest lap, BEA, 0 from outside right
-        "Alice": 15 - 3 + 5 + 5 - 3 - 5,      # 14: winner, red flag, SC right
+        "Alice": 15 + 10 - 3 + 10 - 5 + 0 + 5 + 5 - 3 - 5,   # 29
+        "Bob": -5 + 10 - 2 - 2 + 10 + 15,                     # 26: fastest lap, BEA, 0 from outside right
     }
-    assert [r["name"] for r in mid["rows"]] == ["Bob", "Alice"]
+    assert [r["name"] for r in mid["rows"]] == ["Alice", "Bob"]
     assert {r["name"] for r in mid["season_rows"]} == {"Alice", "Bob"}  # entrants only: Carol and Dave never predicted
     assert mid["updated_at"] >= early["updated_at"]
 
@@ -94,7 +95,9 @@ async def test_race_night(make_race, client, admin, login):
     [rep] = await sync_mod.sweep(paid(), now=after)
     assert rep.phase == "final"
     final = await live(client, rid, alice)
+    # the constructors' tie: its last live value (Ferrari) is cleared, so it shows as missing, not provisional
     assert (final["questions"], final["results_in"], final["live_results"]) == (10, 9, 0)
+    assert next(x for x in rep.questions if x.sequence == 4).note.endswith("enter it by hand.")
     # A tied question scores 0 for everyone until it's settled.
     assert {r["name"]: r["points"] for r in final["rows"]} == {"Alice": 100 - 10, "Bob": -5 - 3 - 2 - 2 - 3 - 5}
 

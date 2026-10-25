@@ -120,6 +120,17 @@ async def save_auto_key(
     return status
 
 
+async def clear_live_key(s: AsyncSession, race_id: int, question_ids: list[int]) -> set[int]:
+    """Delete provisional (live) results for these questions; results typed in or final are kept."""
+    if not question_ids:
+        return set()
+    gone = (await s.scalars(delete(AnswerKey).where(
+        AnswerKey.race_id == race_id, AnswerKey.question_id.in_(question_ids), AnswerKey.source == LIVE_SOURCE,
+    ).returning(AnswerKey.question_id))).all()
+    await s.commit()
+    return set(gone)
+
+
 async def _why_not(s: AsyncSession, race_id: int, rescore: bool) -> ActionError:
     race = await s.get(Race, race_id)
     if race is None:

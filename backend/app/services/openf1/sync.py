@@ -29,7 +29,7 @@ from app.services.openf1 import get_client
 from app.services.openf1.client import OpenF1Client, OpenF1Error, OpenF1Unavailable
 from app.services.openf1.rules import NoValue, RaceData, resolve
 from app.services.races import ActionError
-from app.services.results import LIVE_SOURCE, check_auto_allowed, save_auto_key
+from app.services.results import LIVE_SOURCE, check_auto_allowed, clear_live_key, save_auto_key
 
 log = logging.getLogger(__name__)
 
@@ -144,6 +144,12 @@ async def sync_race(
         for item in report.questions:
             item.status = status.get(item.question_id, item.status)
         report.saved = True
+    if save and data.final:
+        # the official result can't name these (a tie, nobody): drop their last live value so they show as missing
+        cleared = await clear_live_key(s, race_id, [item.question_id for item in report.questions if item.status == "no value"])
+        for item in report.questions:
+            if item.question_id in cleared:
+                item.note += " Live value cleared: enter it by hand."
     _last_reports[race_id] = report
     return report
 

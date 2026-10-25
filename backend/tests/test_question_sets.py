@@ -83,8 +83,11 @@ async def test_us_gp_questions_answered_after_the_flag():
 
 async def test_us_gp_questions_during_the_race():
     vals = await answers(await race_data(FakeOpenF1(cutoff=LIVE_AT)), US_GP_2026)
-    assert vals[0] == "VER" and vals[8] == ["BEA"] and vals[9] == 0   # the race so far
-    assert all(isinstance(vals[i], NoValue) for i in (1, 3, 4, 5))   # these wait for the classification
+    # lap ~16: VER leads and has the fastest lap so far, BOR has stopped (21 still running), Ferrari lead on
+    # points by the running order, BEA is the only climber into the top 10, nobody on the podium from outside
+    assert vals[:5] == ["VER", "BOR", "VER", "Ferrari", 21]
+    assert isinstance(vals[5], NoValue)                                # places gained: tied so far
+    assert vals[6:] == [False, False, ["BEA"], 0]
 
 
 async def test_grid_questions_wait_when_the_grid_is_unknown():

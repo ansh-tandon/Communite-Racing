@@ -48,9 +48,10 @@ async def test_live_standings_follow_live_results_then_final(make_race, client, 
     use_openf1(FakeOpenF1(cutoff=LIVE_AT))
     await client.post(f"/admin/races/{race['id']}/openf1/sync", headers=admin, json={})
     live = (await client.get(f"/races/{race['id']}/live", headers=b)).json()
-    assert (live["results_in"], live["live_results"]) == (2, 2)  # leader and VSC known; finishers wait for the flag
-    assert [(r["name"], r["points"]) for r in live["rows"]] == [("Player 2", 10), ("Player 3", -2)]
-    assert [(r["rank"], r["race_points"], r["prev_rank"]) for r in live["season_rows"]] == [(1, 10, None), (2, -2, None)]
+    assert (live["results_in"], live["live_results"]) == (3, 3)  # leader, VSC, and 21 cars still running (1 stopped)
+    # Alice: VER +5, a VSC +5, 19 finishers vs 21 running -1. Bob: NOR -1, no SC -1, finishers left blank.
+    assert [(r["name"], r["points"]) for r in live["rows"]] == [("Player 2", 9), ("Player 3", -2)]
+    assert [(r["rank"], r["race_points"], r["prev_rank"]) for r in live["season_rows"]] == [(1, 9, None), (2, -2, None)]
 
     use_openf1(FakeOpenF1())
     await client.post(f"/admin/races/{race['id']}/openf1/sync", headers=admin, json={})

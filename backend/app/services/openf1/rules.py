@@ -40,6 +40,10 @@ def _folded(s: Any) -> str:
     return " ".join(str(s).split()).casefold()
 
 
+STOPPED_AFTER = 300  # seconds without starting a lap, while others are lapping
+POINTS = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]  # P1..P10, for live constructor points
+
+
 class RaceData:
     """One race session's OpenF1 data, fetched lazily and cached for a single sync."""
 
@@ -176,6 +180,24 @@ class RaceData:
             raise NoValue(f"No team '{team}' in this session.")
         return found
 
+    async def stopped(self) -> dict[int, int]:
+        """While live: cars that have stopped, with the laps they started. A car counts as stopped when it hasn't
+        started a lap for STOPPED_AFTER seconds while others have; a red flag stops everyone, so nobody is flagged."""
+        last: dict[int, tuple[datetime, int]] = {}
+        for x in await self.fetch("laps"):
+            if not x.get("date_start"):
+                continue
+            t = _t(x["date_start"])
+            if x["driver_number"] not in last or t > last[x["driver_number"]][0]:
+                last[x["driver_number"]] = (t, x["lap_number"])
+        if not last:
+            return {}
+        latest = max(t for t, _ in last.values())
+        out = {n: lap for n, (t, lap) in last.items() if (latest - t).total_seconds() > STOPPED_AFTER}
+        if max(lap for _, lap in last.values()) >= 2:  # a car with no lap at all by lap 2 didn't get away
+            out.update({n: 0 for n in await self.drivers() if n not in last})
+        return out
+
     def need_final(self) -> None:
         if not self.final:
             raise NoValue("Known after the official classification.")
@@ -273,12 +295,16 @@ async def _fastest_lap(d: RaceData, p: dict) -> int:
     return min(timed, key=lambda x: x["lap_duration"])["driver_number"]
 
 
-@rule("most_places_gained", "Most places gained (grid to finish)", "driver", final_only=True)
+@rule("most_places_gained", "Most places gained (grid to finish)", "driver",
+      note="Live: grid against the current running order.")
 async def _most_places_gained(d: RaceData, p: dict) -> int:
-    d.need_final()
     grid = await d.grid()
-    gains = {r["driver_number"]: grid[r["driver_number"]] - r["position"]
-             for r in await d.result() if classified(r) and r["driver_number"] in grid}
+    if d.final:
+        gains = {r["driver_number"]: grid[r["driver_number"]] - r["position"]
+                 for r in await d.result() if classified(r) and r["driver_number"] in grid}
+    else:
+        stopped = await d.stopped()
+        gains = {n: grid[n] - (i + 1) for i, n in enumerate(await d.order()) if n in grid and n not in stopped}
     if not gains:
         raise NoValue("No classified finishers.")
     best = max(gains.values())
@@ -288,9 +314,18 @@ async def _most_places_gained(d: RaceData, p: dict) -> int:
     return top[0]
 
 
-@rule("first_retirement", "First driver to retire", "driver", final_only=True)
+@rule("first_retirement", "First driver to retire", "driver",
+      note="Live: the first car to stop on track (no new lap for 5 minutes).")
 async def _first_retirement(d: RaceData, p: dict) -> int:
-    d.need_final()
+    if not d.final:
+        stopped = await d.stopped()
+        if not stopped:
+            raise NoValue("Nobody has stopped so far.")
+        fewest = min(stopped.values())
+        first = [n for n, lap in stopped.items() if lap == fewest]
+        if len(first) > 1:
+            raise NoValue(f"{len(first)} cars stopped on lap {fewest}.")
+        return first[0]
     out = [r for r in await d.result() if r.get("dnf")]
     if not out:
         raise NoValue("Nobody retired.")
@@ -330,15 +365,19 @@ async def _winning_team(d: RaceData, p: dict) -> str:
     return (await d.drivers())[_nth(await d.order(), 1)]["team_name"]
 
 
-@rule("top_scoring_team", "Constructor with the most points in the race", "team", final_only=True)
+@rule("top_scoring_team", "Constructor with the most points in the race", "team",
+      note="Live: the points table applied to the current running order.")
 async def _top_scoring_team(d: RaceData, p: dict) -> str:
-    d.need_final()
     drivers = await d.drivers()
+    if d.final:
+        scored = [(r["driver_number"], r.get("points") or 0) for r in await d.result()]
+    else:
+        scored = list(zip(await d.order(), POINTS))
     points: dict[str, float] = {}
-    for r in await d.result():
-        team = drivers.get(r["driver_number"], {}).get("team_name")
+    for n, pts in scored:
+        team = drivers.get(n, {}).get("team_name")
         if team:
-            points[team] = points.get(team, 0) + (r.get("points") or 0)
+            points[team] = points.get(team, 0) + pts
     if not points:
         raise NoValue("No classification yet.")
     best = max(points.values())
@@ -441,10 +480,14 @@ async def _retirements(d: RaceData, p: dict) -> int:
     return sum(1 for r in await d.result() if r.get("dnf") or (p["include_dns"] and r.get("dns")))
 
 
-@rule("classified_finishers", "Classified finishers", "number", final_only=True)
+@rule("classified_finishers", "Classified finishers", "number", note="Live: cars still running.")
 async def _classified_finishers(d: RaceData, p: dict) -> int:
-    d.need_final()
-    return sum(1 for r in await d.result() if classified(r))
+    if d.final:
+        return sum(1 for r in await d.result() if classified(r))
+    drivers = await d.drivers()
+    if not drivers:
+        raise NoValue("No entry list yet.")
+    return len(drivers) - len(await d.stopped())
 
 
 @rule("overtakes", "Overtakes", "number", note="OpenF1 says this data may be incomplete.")
