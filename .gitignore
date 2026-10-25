@@ -23,3 +23,7 @@ dist/
 Thumbs.db
 .vscode/
 .idea/
+
+# Production database address for backend/scripts/race_live.ps1, and its printouts
+backend/.env.prod
+race-reports/
