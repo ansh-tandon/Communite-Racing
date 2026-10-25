@@ -330,6 +330,33 @@ async def _winning_team(d: RaceData, p: dict) -> str:
     return (await d.drivers())[_nth(await d.order(), 1)]["team_name"]
 
 
+@rule("top_scoring_team", "Constructor with the most points in the race", "team", final_only=True)
+async def _top_scoring_team(d: RaceData, p: dict) -> str:
+    d.need_final()
+    drivers = await d.drivers()
+    points: dict[str, float] = {}
+    for r in await d.result():
+        team = drivers.get(r["driver_number"], {}).get("team_name")
+        if team:
+            points[team] = points.get(team, 0) + (r.get("points") or 0)
+    if not points:
+        raise NoValue("No classification yet.")
+    best = max(points.values())
+    top = [t for t, v in points.items() if v == best]
+    if len(top) > 1:
+        raise NoValue(f"Tie: {', '.join(sorted(top))} scored {best:g} each. Enter it by hand.")
+    return top[0]
+
+
+async def _climbers(d: RaceData, n: int) -> list[int]:
+    """Drivers inside the top n now (or at the flag) who started outside it, in finishing order."""
+    grid = await d.grid()
+    top = (await d.order())[:n]
+    if not grid or any(x not in grid for x in top):
+        raise NoValue("The starting grid isn't known yet.")
+    return [x for x in top if grid[x] > n]
+
+
 # Pick several / Put in order: drivers
 
 @rule("top", "Top N finishers (Pick several) / finishing order (Put in order)", "drivers", params={"n": TOP})
@@ -348,6 +375,16 @@ async def _top_after_lap(d: RaceData, p: dict) -> list[int]:
 @rule("qualifying_top", "Top N in qualifying", "drivers", params={"n": TOP})
 async def _qualifying_top(d: RaceData, p: dict) -> list[int]:
     return (await d.quali_order())[: p["n"]]
+
+
+@rule("climbers_into_top", "Drivers who started outside the top N and finish inside it", "drivers",
+      params={"n": Param("int", "Top how many", default=10, max=22)},
+      note="For Pick several with pick 1: any of these drivers counts as right.")
+async def _climbers_into_top(d: RaceData, p: dict) -> list[int]:
+    found = await _climbers(d, p["n"])
+    if not found:
+        raise NoValue(f"Nobody started outside the top {p['n']} and is inside it.")
+    return found
 
 
 @rule("retired_drivers", "Drivers who didn't finish (DNF, DNS)", "drivers", final_only=True)
@@ -434,6 +471,14 @@ async def _finishing_position(d: RaceData, p: dict) -> int:
 async def _total_laps(d: RaceData, p: dict) -> int:
     d.need_final()
     return sum(r.get("number_of_laps") or 0 for r in await d.result())
+
+
+@rule("top_from_outside", "How many of the top N started outside it (e.g. podium finishers from P4 or lower)",
+      "number", params={"n": Param("int", "Top how many", default=3, max=22)})
+async def _top_from_outside(d: RaceData, p: dict) -> int:
+    if len(await d.order()) < p["n"]:
+        raise NoValue("No running order yet.")
+    return len(await _climbers(d, p["n"]))
 
 
 @rule("winning_margin", "Winning margin in seconds (rounded)", "number", final_only=True)

@@ -33,25 +33,30 @@ US_GP_2026_FP1: list[dict] = [
      "config": {"min": 15, "max": 65, "tolerance": 2}, "auto": {"rule": "max_track_temp"}},
 ]
 
-# R18, Circuit of the Americas, 25 Oct 2026. Austin's own angles: the uphill run to the Turn 1 hairpin,
-# Cadillac's first home race, the Texas heat, and a lap long enough that strategy decides things.
+# R18, Circuit of the Americas, lights out 25 Oct 2026 20:00 UTC (1:30 am IST, 26 Oct). The league's own question
+# list and marking: each question's points for a right answer, config.penalty off for a wrong one, 0 if blank.
+# Every question is answered by OpenF1; the few cases with no single answer (a tie, nobody retiring, nobody
+# climbing into the top 10) come back as "no value" and are entered by hand, using the extra options below.
+NO_RETIREMENT, NOBODY = "No retirements", "Nobody"
 US_GP_2026: list[dict] = [
-    {"prompt": "Who wins the United States Grand Prix?", "type": "single", "weight": 10, "options": FRONT,
-     "auto": {"rule": "winner"}},
-    {"prompt": "Predict the podium in Austin", "type": "ranked", "weight": 15, "options": FRONT, "config": {"pick": 3},
-     "auto": {"rule": "top", "n": 3}},
-    {"prompt": "It's uphill all the way into the Turn 1 hairpin. Who leads after lap 1?", "type": "single", "weight": 8,
-     "options": FRONT, "auto": {"rule": "leader_after_lap", "lap": 1}},
-    {"prompt": "Does the pole sitter win the race?", "type": "yes_no", "weight": 5,
-     "auto": {"rule": "pole_converts"}},
-    {"prompt": "Cadillac's first home race: does Sergio Pérez finish in the points?", "type": "yes_no", "weight": 6,
-     "auto": {"rule": "driver_in_top", "driver": "PER", "n": 10}},
-    {"prompt": "Who gains the most places from the grid to the flag?", "type": "single", "weight": 6, "options": GRID,
-     "auto": {"rule": "most_places_gained"}},
-    {"prompt": "How many pit stops in the race, all cars together?", "type": "number", "weight": 6,
-     "config": {"min": 0, "max": 80, "tolerance": 3}, "auto": {"rule": "pit_stops"}},
-    {"prompt": "How many times does the Safety Car or Virtual Safety Car come out?", "type": "number", "weight": 5,
-     "config": {"min": 0, "max": 8, "tolerance": 0}, "auto": {"rule": "neutralisations"}},
-    {"prompt": "Texas heat: what's the hottest the track gets during the race (°C)?", "type": "number", "weight": 4,
-     "config": {"min": 15, "max": 65, "tolerance": 2}, "auto": {"rule": "max_track_temp"}},
+    {"prompt": "🏆 Who will win the United States Grand Prix?", "type": "single", "weight": 15, "options": GRID,
+     "config": {"penalty": 5}, "auto": {"rule": "winner"}},
+    {"prompt": "🏎️ Who will be the first driver to retire?", "type": "single", "weight": 10,
+     "options": GRID + [NO_RETIREMENT], "config": {"penalty": 3}, "auto": {"rule": "first_retirement"}},
+    {"prompt": "⏱️ Who will set the fastest lap?", "type": "single", "weight": 10, "options": GRID,
+     "config": {"penalty": 3}, "auto": {"rule": "fastest_lap"}},
+    {"prompt": "🏗️ Which constructor will score the most points?", "type": "single", "weight": 10, "options": TEAMS,
+     "config": {"penalty": 3}, "auto": {"rule": "top_scoring_team"}},
+    {"prompt": "🚘 How many cars will finish the race?", "type": "number", "weight": 10,
+     "config": {"penalty": 5, "min": 0, "max": 22, "tolerance": 0}, "auto": {"rule": "classified_finishers"}},
+    {"prompt": "📈 Who will gain the most positions from their starting grid slot?", "type": "single", "weight": 10,
+     "options": GRID, "config": {"penalty": 3}, "auto": {"rule": "most_places_gained"}},
+    {"prompt": "🚩 Will there be a red flag during the race?", "type": "yes_no", "weight": 5,
+     "config": {"penalty": 2}, "auto": {"rule": "red_flag"}},
+    {"prompt": "🚨 Will there be a Safety Car deployment during the race? (a Virtual Safety Car doesn't count)",
+     "type": "yes_no", "weight": 5, "config": {"penalty": 2}, "auto": {"rule": "safety_car", "include_vsc": False}},
+    {"prompt": "🎯 Which driver starting outside the top 10 will finish in the top 10?", "type": "multi", "weight": 10,
+     "options": GRID + [NOBODY], "config": {"penalty": 3, "pick": 1}, "auto": {"rule": "climbers_into_top", "n": 10}},
+    {"prompt": "🥉 How many podium finishers will start outside the top 3?", "type": "number", "weight": 15,
+     "config": {"penalty": 5, "min": 0, "max": 3, "tolerance": 0}, "auto": {"rule": "top_from_outside", "n": 3}},
 ]

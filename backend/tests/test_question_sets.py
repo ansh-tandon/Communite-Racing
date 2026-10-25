@@ -51,9 +51,9 @@ async def answers(d: RaceData, questions: list[dict]) -> list:
     return out
 
 
-def test_us_gp_questions_are_all_auto_answered():
-    assert len(US_GP_2026) == 9
-    assert sum(q["weight"] for q in US_GP_2026) == 65
+def test_us_gp_questions_follow_the_league_marking():
+    assert [(q["weight"], q["config"]["penalty"]) for q in US_GP_2026] == [
+        (15, 5), (10, 3), (10, 3), (10, 3), (10, 5), (10, 3), (5, 2), (5, 2), (10, 3), (15, 5)]
     for q in US_GP_2026:
         assert q["auto"]["rule"] in RULES, q["prompt"]
         assert validate_auto(q["type"], q["auto"]), q["prompt"]
@@ -62,40 +62,44 @@ def test_us_gp_questions_are_all_auto_answered():
 async def test_us_gp_questions_accepted_by_the_admin_api(make_race):
     race = await make_race(questions=US_GP_2026)
     assert [q["prompt"] for q in race["questions"]] == [q["prompt"] for q in US_GP_2026]
-    assert race["questions"][4]["auto"] == {"rule": "driver_in_top", "driver": "PER", "n": 10}
+    assert race["questions"][8]["auto"] == {"rule": "climbers_into_top", "n": 10}
 
 
 async def test_us_gp_questions_answered_after_the_flag():
+    result = json.loads((FIXTURES / "singapore_2026" / "session_result.json").read_text())
+    teams = {d["driver_number"]: d["team_name"] for d in json.loads((FIXTURES / "singapore_2026" / "drivers.json").read_text())}
+    points: dict[str, float] = {}
+    for r in result:
+        points[teams[r["driver_number"]]] = points.get(teams[r["driver_number"]], 0) + r["points"]
+    assert points["Ferrari"] == points["Red Bull Racing"] == max(points.values())  # a real tie in the data
+
     vals = await answers(await race_data(FakeOpenF1()), US_GP_2026)
-    assert vals == [
-        "VER",                    # winner
-        ["VER", "LEC", "ANT"],    # podium
-        "VER",                    # leader after lap 1
-        True,                     # pole sitter won
-        False,                    # Pérez not in the top 10
-        vals[5],                  # most places gained: checked below
-        25,                       # pit stops
-        2,                        # SC + VSC: two VSCs
-        vals[8],                  # hottest track temperature: checked below
-    ]
-    assert vals[5] in US_GP_2026[5]["options"]
-    assert 15 <= vals[8] <= 65
+    assert vals[:3] == ["VER", "BOR", "LEC"]          # winner, first retirement (lap 7), fastest lap
+    assert isinstance(vals[3], NoValue) and "Tie" in str(vals[3])   # constructors tied: entered by hand
+    assert vals[4:] == [19, "HAD", False, False,        # finishers, most places gained, no red flag, no SC (VSCs only)
+                        ["RUS", "HAD"],                 # both started outside the top 10 and finished inside it
+                        1]                              # ANT: P3 from P4
 
 
 async def test_us_gp_questions_during_the_race():
     vals = await answers(await race_data(FakeOpenF1(cutoff=LIVE_AT)), US_GP_2026)
-    assert vals[0] == "VER" and vals[2] == "VER"         # leading at the time, and after lap 1
-    assert vals[6] == 0 and vals[7] == 1                 # no stops yet, one VSC so far
-    assert isinstance(vals[5], NoValue)                  # places gained waits for the classification
+    assert vals[0] == "VER" and vals[8] == ["BEA"] and vals[9] == 0   # the race so far
+    assert all(isinstance(vals[i], NoValue) for i in (1, 3, 4, 5))   # these wait for the classification
+
+
+async def test_grid_questions_wait_when_the_grid_is_unknown():
+    vals = await answers(await race_data(FakeOpenF1("monaco_2026")), US_GP_2026)  # recording has no position data
+    assert vals[3] == "Mercedes"
+    assert all(isinstance(vals[i], NoValue) for i in (5, 8, 9))
 
 
 async def test_us_gp_scored_end_to_end(make_race, client, admin, login, use_openf1):
     use_openf1(FakeOpenF1())
     race = await make_race(questions=US_GP_2026)
-    qs = race["questions"]
+    q = [x["id"] for x in race["questions"]]
     player = await login("fan@example.com")
-    picks = {qs[0]["id"]: "VER", qs[1]["id"]: ["VER", "NOR", "ANT"], qs[2]["id"]: "LEC", qs[3]["id"]: True,
-             qs[4]["id"]: True, qs[6]["id"]: 23, qs[7]["id"]: 2}
+    picks = {q[0]: "VER", q[1]: "STR", q[2]: "LEC", q[3]: "Ferrari", q[4]: 18, q[6]: False, q[7]: True,
+             q[8]: ["RUS"], q[9]: 1}   # Q6 left blank
     r = await client.put(f"/races/{race['id']}/answers", headers=player, json={"answers": {str(k): v for k, v in picks.items()}})
     assert r.status_code == 200, r.text
 
@@ -106,13 +110,15 @@ async def test_us_gp_scored_end_to_end(make_race, client, admin, login, use_open
 
     rep = (await client.post(f"/admin/races/{race['id']}/openf1/sync", headers=admin, json={})).json()
     assert rep["phase"] == "final"
-    assert [q["status"] for q in rep["questions"]] == ["saved"] * 9
+    assert [x["status"] for x in rep["questions"]] == ["saved"] * 3 + ["no value"] + ["saved"] * 6
+    # the constructors tie, settled by hand: both teams can't be right in a Pick one question, so pick one
+    await client.put(f"/admin/races/{race['id']}/answer-key", headers=admin, json={"answers": {str(q[3]): "Ferrari"}})
 
     assert (await client.post(f"/admin/races/{race['id']}/score", headers=admin)).status_code == 200
     rows = (await client.get(f"/races/{race['id']}/leaderboard", headers=admin)).json()["rows"]
-    # winner 10 + podium P1 and P3 right (15 * 2 // 3 = 10) + pole converts 5 + pit stops 23 within 3 of 25 (6)
-    # + two neutralisations 5; lap-1 leader and Pérez wrong
-    assert rows[0]["points"] == 10 + 10 + 5 + 6 + 5
+    # +15 winner, -3 retirement (STR, not BOR), +10 fastest lap, +10 Ferrari, -5 finishers (18 not 19),
+    # 0 blank, +5 no red flag, -2 SC (there wasn't one), +10 RUS climbed into the top 10, +15 one podium from outside
+    assert rows[0]["points"] == 15 - 3 + 10 + 10 - 5 + 0 + 5 - 2 + 10 + 15
 
 
 # ---------- FP1: replayed on the recorded 2026 Singapore FP1 ----------
