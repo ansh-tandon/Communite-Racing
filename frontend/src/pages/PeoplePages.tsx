@@ -19,8 +19,11 @@ export function LeaderboardPage() {
   const scored = (races.data ?? []).filter((r) => r.phase === 'results' && r.season === s.data?.season);
   const latest = scored.reduce<(typeof scored)[number] | undefined>((a, r) => (!a || r.round > a.round ? r : a), undefined);
   const lastRound = useRaceLeaderboard(latest?.id ?? NaN, !!latest && scored.length > 1);
-  // a quiz that has locked but isn't published yet: its provisional standings go live at the top
-  const live = (races.data ?? []).filter((r) => r.phase === 'closed').sort((a, b) => b.quiz_closes_at.localeCompare(a.quiz_closes_at))[0];
+  // a race that locked in the last 12 hours and isn't published yet: its provisional standings go live at the top
+  // (an old quiz left unscored never takes over)
+  const live = (races.data ?? [])
+    .filter((r) => r.phase === 'closed' && Date.now() - new Date(r.quiz_closes_at).getTime() < 12 * 3600_000)
+    .sort((a, b) => b.quiz_closes_at.localeCompare(a.quiz_closes_at))[0];
   const movement = useMemo(
     () => (s.data && lastRound.data ? rankMovement(s.data.rows, lastRound.data.rows) : undefined),
     [s.data, lastRound.data],
