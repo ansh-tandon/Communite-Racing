@@ -132,6 +132,18 @@ class LiveSeasonRow(BaseModel):
     prev_rank: int | None  # place in the published standings; None = not in them yet
 
 
+class LiveResult(BaseModel):
+    question_id: int
+    sequence: int
+    prompt: str
+    type: str
+    weight: int
+    options: list[str]
+    config: dict[str, Any]
+    value: Any = None  # None = no result yet
+    live: bool  # provisional OpenF1 value that can still change
+
+
 class LiveLeaderboard(BaseModel):
     race_id: int
     season: int
@@ -139,6 +151,7 @@ class LiveLeaderboard(BaseModel):
     results_in: int  # questions with a result so far
     live_results: int  # of those, provisional OpenF1 values that can still change
     updated_at: datetime | None
+    results: list[LiveResult] = []
     rows: list[LeaderRow]
     season_rows: list[LiveSeasonRow]
 

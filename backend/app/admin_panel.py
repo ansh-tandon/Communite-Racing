@@ -162,13 +162,21 @@ class RaceAdmin(ModelView, model=Race):
         return await self._run(request, lambda s, race_id: sync_race(s, get_client(), race_id))
 
 
+def _rules(config: dict | None) -> dict:
+    """A question's config without its marking: the parts that can't change once players have answered."""
+    return {k: v for k, v in (config or {}).items() if k != "penalty"}
+
+
 class QuestionAdmin(ModelView, model=Question):
     name, name_plural, icon = "Question", "Questions", "fa-solid fa-circle-question"
-    column_list = [Question.race, Question.sequence, Question.prompt, Question.type, Question.weight]
-    column_labels = {Question.sequence: "No.", Question.weight: "Points"}
+    column_list = [Question.race, Question.sequence, Question.prompt, Question.type, Question.weight, Question.config]
+    column_labels = {Question.sequence: "No.", Question.weight: "Points", Question.config: "Minus if wrong"}
     column_default_sort = [(Question.race_id, True), (Question.sequence, False)]
     column_searchable_list = [Question.prompt]
-    column_formatters = {Question.type: lambda m, a: TYPE_LABELS.get(m.type, m.type)}
+    column_formatters = {
+        Question.type: lambda m, a: TYPE_LABELS.get(m.type, m.type),
+        Question.config: lambda m, a: f"−{m.config['penalty']}" if (m.config or {}).get("penalty") else "—",
+    }
     form_columns = [Question.race, Question.sequence, Question.prompt, Question.type, Question.weight,
                     Question.options, Question.config, Question.auto]
     form_overrides = {"type": SelectField}
@@ -201,9 +209,9 @@ class QuestionAdmin(ModelView, model=Question):
         race_id = data["race"].id if hasattr(data.get("race"), "id") else (int(data["race"]) if data.get("race") else None)
         if is_created:
             await self._require_draft(race_id, "Questions can only be added while the race is a draft.")
-        elif any(getattr(model, k) != data[k] for k in ("type", "options", "config")):
-            await self._require_draft(model.race_id, "The quiz is open: you can fix wording or points, "
-                                                     "but not the type, options or config.")
+        elif any(getattr(model, k) != data[k] for k in ("type", "options")) or _rules(model.config) != _rules(data["config"]):
+            await self._require_draft(model.race_id, "The quiz is open: you can fix wording, points or minus marks "
+                                                     "(\"penalty\" in Config), but not the type, options or other config.")
 
     async def on_model_delete(self, model, request):
         await self._require_draft(model.race_id, "Questions can only be deleted while the race is a draft.")

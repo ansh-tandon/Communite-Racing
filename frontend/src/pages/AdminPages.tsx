@@ -274,7 +274,12 @@ export function AdminRacePage() {
               <li key={q.id} className="panel p-5">
                 <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
                   <span className="sector">Q{q.sequence} · {TYPE_LABEL[q.type]} · +{q.weight} pts{q.config.penalty ? ` / −${q.config.penalty}` : ''}</span>
-                  {canEditKey && (key[q.id] !== undefined ? <Badge tone={keyErrors[q.id] ? 'red' : 'green'}>{keyErrors[q.id] ? 'Check' : 'Set'}</Badge> : <Badge tone="amber">Missing</Badge>)}
+                  {canEditKey && (key[q.id] === undefined ? <Badge tone="amber">Missing</Badge>
+                    : keyErrors[q.id] ? <Badge tone="red">Check</Badge>
+                    : JSON.stringify(key[q.id]) !== JSON.stringify(r.answer_key[q.id]) ? <Badge tone="green">Edited · not saved</Badge>
+                    : r.answer_key_sources?.[q.id] === 'openf1_live' ? <Badge tone="amber" dot>Live · can change</Badge>
+                    : r.answer_key_sources?.[q.id] === 'openf1' ? <Badge tone="green">OpenF1 · official</Badge>
+                    : <Badge tone="green">Set by you</Badge>)}
                 </div>
                 <p className="mb-4 text-lg font-semibold">{q.prompt}</p>
                 {canEditKey ? (

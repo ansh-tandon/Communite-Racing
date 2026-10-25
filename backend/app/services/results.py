@@ -247,6 +247,10 @@ async def live_leaderboard(s: AsyncSession, race: Race) -> dict:
         "results_in": len(key),
         "live_results": sum(1 for src in sources.values() if src == LIVE_SOURCE),
         "updated_at": updated,
+        # what each question is scoring against right now: once the quiz has locked, results aren't secret
+        "results": [{"question_id": q.id, "sequence": q.sequence, "prompt": q.prompt, "type": q.type, "weight": q.weight,
+                     "options": q.options, "config": q.config, "value": key.get(q.id), "live": sources.get(q.id) == LIVE_SOURCE}
+                    for q in sorted(questions.values(), key=lambda q: q.sequence)],
         "rows": [{"rank": r.rank, "user_id": r.user_id, "name": names.get(r.user_id, f"Player {r.user_id}"),
                   "points": r.points, "correct_count": r.correct_count} for r in results],
         "season_rows": combined,

@@ -94,6 +94,18 @@ export interface LiveSeasonRow {
   prev_rank: number | null;
 }
 
+export interface LiveResult {
+  question_id: number;
+  sequence: number;
+  prompt: string;
+  type: Question['type'];
+  weight: number;
+  options: string[];
+  config: QuestionConfig;
+  value: AnswerValue | null;
+  live: boolean;
+}
+
 export interface LiveLeaderboard {
   race_id: number;
   season: number;
@@ -101,6 +113,7 @@ export interface LiveLeaderboard {
   results_in: number;
   live_results: number;
   updated_at: string | null;
+  results?: LiveResult[];
   rows: LeaderRow[];
   season_rows: LiveSeasonRow[];
 }
@@ -139,6 +152,8 @@ export interface AdminRace {
 export interface AdminRaceDetail extends AdminRace {
   entries: number;
   questions: Question[];
+  /** Where each result came from: manual | openf1 (official) | openf1_live (provisional) */
+  answer_key_sources?: Record<string, string>;
   answer_key: Record<string, AnswerValue>;
 }
 

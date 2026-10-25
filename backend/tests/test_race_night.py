@@ -87,6 +87,9 @@ async def test_race_night(make_race, client, admin, login):
         "Bob": -5 + 10 - 2 - 2 + 10 + 15,                     # 26: fastest lap, BEA, 0 from outside right
     }
     assert [r["name"] for r in mid["rows"]] == ["Alice", "Bob"]
+    # players can see what each question is scoring against right now
+    now = {r["sequence"]: (r["value"], r["live"]) for r in mid["results"]}
+    assert now[1] == ("VER", True) and now[2] == ("BOR", True) and now[6] == (None, False)
     assert {r["name"] for r in mid["season_rows"]} == {"Alice", "Bob"}  # entrants only: Carol and Dave never predicted
     assert mid["updated_at"] >= early["updated_at"]
 
