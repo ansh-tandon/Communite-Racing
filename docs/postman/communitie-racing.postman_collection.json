@@ -1,0 +1,691 @@
+{
+  "info": {
+    "name": "Communitie Racing API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Set the collection variable `token`: on communitieracing.in (logged in as admin) press Ctrl+Shift+J and run localStorage.getItem('crql.token'). Tokens expire; repeat when you get 401. Interactive docs: https://api.communitieracing.in/docs"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api.communitieracing.in"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "race",
+      "value": "4"
+    },
+    {
+      "key": "session",
+      "value": "11396"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Look (safe)",
+      "item": [
+        {
+          "name": "Health (no login)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "{\"ok\": true} when the API is awake. First call after 15 idle minutes takes ~1 min."
+          }
+        },
+        {
+          "name": "Who am I",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Checks your token. is_admin should be true."
+          }
+        },
+        {
+          "name": "All races",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/races",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "races"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "One race",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/races/{{race}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "races",
+                "{{race}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Live provisional leaderboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/races/{{race}}/live",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "races",
+                "{{race}}",
+                "live"
+              ]
+            },
+            "description": "Only between the lock and published results; 409 otherwise."
+          }
+        },
+        {
+          "name": "Race leaderboard (published)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/races/{{race}}/leaderboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "races",
+                "{{race}}",
+                "leaderboard"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Season standings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/standings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "standings"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Admin and OpenF1 (safe)",
+      "item": [
+        {
+          "name": "Admin: all races",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/races",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "races"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Admin: race with questions and results",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/races/{{race}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "races",
+                "{{race}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "OpenF1: account and rules",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/openf1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "openf1"
+              ]
+            },
+            "description": "live=true means the OpenF1 account is set: results fill in during the race."
+          }
+        },
+        {
+          "name": "OpenF1: race link and last check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/races/{{race}}/openf1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "races",
+                "{{race}}",
+                "openf1"
+              ]
+            },
+            "description": "session_key, each result's source, and the last sync's per-question values and notes."
+          }
+        },
+        {
+          "name": "OpenF1: preview a sync (saves nothing)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/races/{{race}}/openf1/sync",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "races",
+                "{{race}}",
+                "openf1",
+                "sync"
+              ]
+            },
+            "description": "Reads OpenF1 now and shows what each question would get. Safe at any time.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"save\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "OpenF1 raw: the linked session",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/openf1/data/sessions?session_key={{session}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "openf1",
+                "data",
+                "sessions"
+              ],
+              "query": [
+                {
+                  "key": "session_key",
+                  "value": "{{session}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "OpenF1 raw: drivers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/openf1/data/drivers?session_key={{session}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "openf1",
+                "data",
+                "drivers"
+              ],
+              "query": [
+                {
+                  "key": "session_key",
+                  "value": "{{session}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "OpenF1 raw: starting grid",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/openf1/data/starting_grid?session_key={{session}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "openf1",
+                "data",
+                "starting_grid"
+              ],
+              "query": [
+                {
+                  "key": "session_key",
+                  "value": "{{session}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "OpenF1 raw: race control (flags, SC)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/openf1/data/race_control?session_key={{session}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "openf1",
+                "data",
+                "race_control"
+              ],
+              "query": [
+                {
+                  "key": "session_key",
+                  "value": "{{session}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "OpenF1 raw: laps of the leader's lap 1",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/openf1/data/laps?session_key={{session}}&lap_number=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "openf1",
+                "data",
+                "laps"
+              ],
+              "query": [
+                {
+                  "key": "session_key",
+                  "value": "{{session}}"
+                },
+                {
+                  "key": "lap_number",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "OpenF1 raw: pit stops",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/openf1/data/pit?session_key={{session}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "openf1",
+                "data",
+                "pit"
+              ],
+              "query": [
+                {
+                  "key": "session_key",
+                  "value": "{{session}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "OpenF1 raw: classification",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/openf1/data/session_result?session_key={{session}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "openf1",
+                "data",
+                "session_result"
+              ],
+              "query": [
+                {
+                  "key": "session_key",
+                  "value": "{{session}}"
+                }
+              ]
+            },
+            "description": "Empty until OpenF1 posts the official result."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Changes data (careful)",
+      "item": [
+        {
+          "name": "Fill results from OpenF1 now (saves)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/races/{{race}}/openf1/sync",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "races",
+                "{{race}}",
+                "openf1",
+                "sync"
+              ]
+            },
+            "description": "Same as the background job. Only after the lock. Never overwrites results you typed.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Link a different OpenF1 session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/races/{{race}}/openf1/link",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "races",
+                "{{race}}",
+                "openf1",
+                "link"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"session_key\": 11396\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Enter results by hand (question id -> answer)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/races/{{race}}/answer-key",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "races",
+                "{{race}}",
+                "answer-key"
+              ]
+            },
+            "description": "Question ids are in 'Admin: race with questions and results'. score=true is the Save and score button.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answers\": {\n    \"QUESTION_ID\": \"VER\"\n  },\n  \"score\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Save and score",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/races/{{race}}/score",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "races",
+                "{{race}}",
+                "score"
+              ]
+            },
+            "description": "Fails while any result is missing or still live."
+          }
+        },
+        {
+          "name": "Re-score after a penalty",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/races/{{race}}/rescore",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "races",
+                "{{race}}",
+                "rescore"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answers\": {\n    \"QUESTION_ID\": \"LEC\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Publish results",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/races/{{race}}/publish",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "races",
+                "{{race}}",
+                "publish"
+              ]
+            },
+            "description": "Only needed when 'reveal immediately' is off."
+          }
+        },
+        {
+          "name": "Open quiz",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/races/{{race}}/open",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "races",
+                "{{race}}",
+                "open"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Close quiz NOW (locks early!)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/races/{{race}}/close",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "races",
+                "{{race}}",
+                "close"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    }
+  ]
+}
