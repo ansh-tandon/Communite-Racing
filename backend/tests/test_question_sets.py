@@ -76,7 +76,7 @@ async def test_us_gp_questions_answered_after_the_flag():
     vals = await answers(await race_data(FakeOpenF1()), US_GP_2026)
     assert vals[:3] == ["VER", "BOR", "LEC"]          # winner, first retirement (lap 7), fastest lap
     assert isinstance(vals[3], NoValue) and "Tie" in str(vals[3])   # constructors tied: entered by hand
-    assert vals[4:] == [19, "HAD", False, False,        # finishers, most places gained, no red flag, no SC (VSCs only)
+    assert vals[4:] == [19, "VER", False, False,        # finishers, leader after lap 1, no red flag, no SC (VSCs only)
                         ["RUS", "HAD"],                 # both started outside the top 10 and finished inside it
                         1]                              # ANT: P3 from P4
 
@@ -86,7 +86,7 @@ async def test_us_gp_questions_during_the_race():
     # lap ~16: VER leads and has the fastest lap so far, BOR has stopped (21 still running), Ferrari lead on
     # points by the running order, BEA is the only climber into the top 10, nobody on the podium from outside
     assert vals[:5] == ["VER", "BOR", "VER", "Ferrari", 21]
-    assert isinstance(vals[5], NoValue)                                # places gained: tied so far
+    assert vals[5] == "VER"                                            # led after lap 1
     assert vals[6:] == [False, False, ["BEA"], 0]
 
 

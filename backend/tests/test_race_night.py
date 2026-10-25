@@ -44,7 +44,7 @@ async def test_race_night(make_race, client, admin, login):
     bob = await player(client, login, "bob@example.com", "Bob")
     await player(client, login, "carol@example.com", "Carol")  # signs up, never predicts
     picks = {
-        "Alice": (alice, {q[0]: "VER", q[1]: "BOR", q[2]: "LEC", q[3]: "Ferrari", q[4]: 19, q[5]: "HAD",
+        "Alice": (alice, {q[0]: "VER", q[1]: "BOR", q[2]: "LEC", q[3]: "Ferrari", q[4]: 19, q[5]: "HAD",  # Q6: VER led lap 1, so -3
                           q[6]: False, q[7]: False, q[8]: ["RUS"], q[9]: 1}),
         "Bob": (bob, {q[0]: "LEC", q[2]: "VER", q[6]: True, q[7]: True, q[8]: ["BEA"], q[9]: 0}),
     }
@@ -81,15 +81,15 @@ async def test_race_night(make_race, client, admin, login):
     mid = await live(client, rid, bob)
     # VER leads, VER has the fastest lap so far, no red flag or SC, BEA is the only climber into the top 10,
     # nobody on the podium from outside the top 3. Unknown answers score 0 for now.
-    # Live too: BOR stopped first, Ferrari lead on points by the running order, 21 cars running; places gained tied.
+    # Live too: BOR stopped first, Ferrari lead on points by the running order, 21 cars running; VER led lap 1.
     assert {r["name"]: r["points"] for r in mid["rows"]} == {
-        "Alice": 15 + 10 - 3 + 10 - 5 + 0 + 5 + 5 - 3 - 5,   # 29
+        "Alice": 15 + 10 - 3 + 10 - 5 - 3 + 5 + 5 - 3 - 5,   # 26
         "Bob": -5 + 10 - 2 - 2 + 10 + 15,                     # 26: fastest lap, BEA, 0 from outside right
     }
     assert [r["name"] for r in mid["rows"]] == ["Alice", "Bob"]
     # players can see what each question is scoring against right now
     now = {r["sequence"]: (r["value"], r["live"]) for r in mid["results"]}
-    assert now[1] == ("VER", True) and now[2] == ("BOR", True) and now[6] == (None, False)
+    assert now[1] == ("VER", True) and now[2] == ("BOR", True) and now[6] == ("VER", True)
     assert {r["name"] for r in mid["season_rows"]} == {"Alice", "Bob"}  # entrants only: Carol and Dave never predicted
     assert mid["updated_at"] >= early["updated_at"]
 
@@ -102,14 +102,14 @@ async def test_race_night(make_race, client, admin, login):
     assert (final["questions"], final["results_in"], final["live_results"]) == (10, 9, 0)
     assert next(x for x in rep.questions if x.sequence == 4).note.endswith("enter it by hand.")
     # A tied question scores 0 for everyone until it's settled.
-    assert {r["name"]: r["points"] for r in final["rows"]} == {"Alice": 100 - 10, "Bob": -5 - 3 - 2 - 2 - 3 - 5}
+    assert {r["name"]: r["points"] for r in final["rows"]} == {"Alice": 100 - 13 - 10, "Bob": -5 - 3 - 2 - 2 - 3 - 5}
 
     # Settle the tie by hand, score, and it's published.
     r = await client.put(f"/admin/races/{rid}/answer-key", headers=admin, json={"answers": {str(q[3]): "Ferrari"}})
     assert r.status_code == 200, r.text
     assert (await client.post(f"/admin/races/{rid}/score", headers=admin)).status_code == 200
     board = (await client.get(f"/races/{rid}/leaderboard", headers=bob)).json()
-    assert board["published"] and [(r["name"], r["points"], r["rank"]) for r in board["rows"]] == [("Alice", 100, 1), ("Bob", -20, 2)]
+    assert board["published"] and [(r["name"], r["points"], r["rank"]) for r in board["rows"]] == [("Alice", 87, 1), ("Bob", -20, 2)]
     season = (await client.get("/standings", headers=bob)).json()["rows"]
-    assert [(r["name"], r["points"]) for r in season] == [("Alice", 100), ("Bob", -20)]
+    assert [(r["name"], r["points"]) for r in season] == [("Alice", 87), ("Bob", -20)]
     assert (await client.get(f"/races/{rid}/live", headers=alice)).status_code == 409  # live view hands over to results

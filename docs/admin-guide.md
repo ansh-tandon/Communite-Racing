@@ -51,12 +51,12 @@ Draft ──Open──► Open ──deadline──► Locked ──Score──�
 2. Fill in **Grand Prix**, **Circuit**, **Country**, **Season**, **Round**, **Quiz opens (your time)**,
    **Quiz locks (normally lights out)**, and the box **Show results to players as soon as scoring finishes**.
 3. The seven standard questions are pre-filled. Edit, remove (bin icon) or **Add** questions. Each has wording,
-   **Type**, **Points**, and depending on the type **Pick**, **Min / Max**, and **Options** (comma-separated;
-   driver codes like `VER` show as names and team colours).
+   **Type**, **Points**, **Minus if wrong**, and depending on the type **Pick**, **Min / Max**, **Tolerance (±)**
+   and **Options** (comma-separated; driver codes like `VER` show as names and team colours).
 4. **Create draft**, then on the race page **Open quiz**.
 
-The website form can't set **auto-answer rules** or **negative marking**. Add those in the data panel (B) before
-opening, or create the quiz with C or E instead.
+The website form can't set **auto-answer rules**. Add those in the data panel (B) before opening, or create the
+quiz with C or E instead.
 
 Shortcut: create the race with no questions, then **Copy previous questions** on its page.
 
