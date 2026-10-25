@@ -178,7 +178,8 @@ class QuestionAdmin(ModelView, model=Question):
         "weight": {"label": "Points"},
         "options": {"description": 'Choices as a JSON list, e.g. ["VER", "NOR", "LEC"]. Use [] for Number and Yes / no.'},
         "config": {"description": 'Pick several / Put in order: {"pick": 3}. Number: {"min": 0, "max": 20, "tolerance": 1}. '
-                                  'All-or-nothing scoring: add "scoring": "all". Otherwise {}.'},
+                                  'All-or-nothing scoring: add "scoring": "all". Negative marking: add "penalty": 5 '
+                                  '(points off a wrong answer; blank scores 0), e.g. {"penalty": 3}. Otherwise {}.'},
         "auto": {"label": "Auto-answer from OpenF1",
                  "description": 'Optional. e.g. {"rule": "winner"}, {"rule": "top", "n": 3} (podium), '
                                 '{"rule": "top_after_lap", "lap": 10, "n": 10}, {"rule": "safety_car"}, '

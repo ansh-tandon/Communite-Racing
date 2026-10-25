@@ -9,7 +9,16 @@ export const TYPE_LABEL: Record<Question['type'], string> = {
   single: 'Pick one', multi: 'Pick several', ranked: 'Put in order', number: 'Number', yes_no: 'Yes or no',
 };
 
+/** "−5": what a wrong answer costs, or '' when there's no negative marking. */
+export const penaltyLabel = (q: Question) => (q.config.penalty ? `−${q.config.penalty}` : '');
+
 export function describe(q: Question): string {
+  const base = describeType(q);
+  const wrong = q.config.penalty ? `A wrong answer costs ${q.config.penalty} point${q.config.penalty === 1 ? '' : 's'}; leave it blank to score 0.` : '';
+  return [base, wrong].filter(Boolean).join(' ');
+}
+
+function describeType(q: Question): string {
   if (q.type === 'multi') return `Choose ${q.config.pick}. Order doesn't matter${q.config.scoring === 'all' ? '; all must be right to score' : '; each correct pick scores'}.`;
   if (q.type === 'ranked') return `Choose ${q.config.pick} in order${q.config.scoring === 'all' ? '; the whole order must be right' : '; points for each one in the right place'}.`;
   if (q.type === 'number') return q.config.tolerance ? `Within ${q.config.tolerance} either side scores full points.` : 'Exact number to score.';

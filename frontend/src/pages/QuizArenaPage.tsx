@@ -3,7 +3,7 @@ import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { AlertTriangle, ArrowLeft, ArrowRight, Check, CircleDashed, Cloud, CloudOff, Flag, Lock, Timer, Trophy, Users } from 'lucide-react';
 import type { AnswerValue, Question, RaceDetail } from '../api/types';
 import { Countdown, RaceStatusBadge } from '../components/race';
-import { describe, formatValue, QuestionRenderer, TYPE_LABEL } from '../components/quiz';
+import { describe, formatValue, penaltyLabel, QuestionRenderer, TYPE_LABEL } from '../components/quiz';
 import { PredictionPass } from '../components/pass';
 import { Button, EmptyState, ErrorState, Skeleton, cx } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
@@ -34,7 +34,7 @@ function RaceIntro({ race, answered, onStart }: { race: RaceDetail; answered: nu
           {race.name.replace(/\s+grand prix$/i, '')}
         </h1>
         <p className="mt-5 max-w-md text-lg">
-          {n} questions, {total} points to play for{race.entries > 0 && <>. {race.entries} {race.entries === 1 ? 'player is' : 'players are'} in</>}. Your picks save as you tap.
+          {n} questions, {total} points to play for{race.questions.some((x) => x.config.penalty) && <>. Wrong answers lose points, so skip what you don't know</>}{race.entries > 0 && <>. {race.entries} {race.entries === 1 ? 'player is' : 'players are'} in</>}. Your picks save as you tap.
         </p>
         {open ? (
           <div className="mt-6">
@@ -202,7 +202,8 @@ function Arena({ race }: { race: RaceDetail }) {
           <article key={q.id} className="animate-rise md:rounded-xl md:border md:border-line md:bg-surface/40 md:p-8" aria-labelledby={`q-${q.id}`}>
             <div className="mb-3 flex flex-wrap items-center gap-2">
               <span className="sector">{TYPE_LABEL[q.type]}</span>
-              <span className="num rounded-sm bg-accent/15 px-1.5 py-0.5 font-display text-[13px] font-bold uppercase tracking-wider text-[#FF5A52]">{q.weight} pts</span>
+              <span className="num rounded-sm bg-accent/15 px-1.5 py-0.5 font-display text-[13px] font-bold uppercase tracking-wider text-[#FF5A52]">+{q.weight} pts</span>
+              {penaltyLabel(q) && <span className="num rounded-sm border border-line px-1.5 py-0.5 font-display text-[13px] font-bold uppercase tracking-wider text-muted">{penaltyLabel(q)} if wrong</span>}
             </div>
             <h2 id={`q-${q.id}`} className="max-w-3xl text-[26px] font-bold leading-[1.15] tracking-tight sm:text-[34px]">{q.prompt}</h2>
             {describe(q) && <p className="mt-2 max-w-2xl text-[15px] text-muted">{describe(q)}</p>}

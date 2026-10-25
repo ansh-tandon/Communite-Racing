@@ -24,6 +24,8 @@ export interface QuestionConfig {
   max?: number;
   tolerance?: number;
   scoring?: 'per_item' | 'all';
+  /** Points taken off a wrong answer; a blank answer scores 0. */
+  penalty?: number;
 }
 
 export interface Question {

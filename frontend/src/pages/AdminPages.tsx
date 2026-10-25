@@ -71,13 +71,18 @@ function QuestionEditor({ q, i, onChange, onRemove }: { q: QuestionIn; i: number
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <label className="text-sm text-muted">Type<select className={cx(field, 'mt-1')} value={q.type} onChange={(e) => {
           const type = e.target.value as QuestionType;
-          set({ type, options: type === 'number' || type === 'yes_no' ? [] : q.options.length ? q.options : DRIVER_CODES, config: type === 'multi' || type === 'ranked' ? { pick: 3 } : type === 'number' ? { min: 0, max: 22, tolerance: 0 } : {} });
+          const keep = q.config.penalty ? { penalty: q.config.penalty } : {};
+          set({ type, options: type === 'number' || type === 'yes_no' ? [] : q.options.length ? q.options : DRIVER_CODES, config: { ...keep, ...(type === 'multi' || type === 'ranked' ? { pick: 3 } : type === 'number' ? { min: 0, max: 22, tolerance: 0 } : {}) } });
         }}>{(Object.keys(TYPE_LABEL) as QuestionType[]).map((t) => <option key={t} value={t}>{TYPE_LABEL[t]}</option>)}</select></label>
         <label className="text-sm text-muted">Points<input type="number" min={1} max={100} className={cx(field, 'mt-1')} value={q.weight} onChange={(e) => set({ weight: +e.target.value })} /></label>
+        <label className="text-sm text-muted">Minus if wrong<input type="number" min={0} max={100} className={cx(field, 'mt-1')} value={q.config.penalty ?? 0}
+          onChange={(e) => { const { penalty: _, ...rest } = q.config; const v = Math.max(0, Math.round(+e.target.value || 0)); set({ config: v ? { ...rest, penalty: v } : rest }); }}
+          aria-describedby={`penalty-${i}`} /><span id={`penalty-${i}`} className="sr-only">Points taken off a wrong answer. 0 for no negative marking.</span></label>
         {(q.type === 'multi' || q.type === 'ranked') && <label className="text-sm text-muted">Pick<input type="number" min={1} className={cx(field, 'mt-1')} value={q.config.pick ?? 3} onChange={(e) => cfg({ pick: +e.target.value })} /></label>}
         {q.type === 'number' && <>
           <label className="text-sm text-muted">Min<input type="number" className={cx(field, 'mt-1')} value={q.config.min ?? 0} onChange={(e) => cfg({ min: +e.target.value })} /></label>
           <label className="text-sm text-muted">Max<input type="number" className={cx(field, 'mt-1')} value={q.config.max ?? 22} onChange={(e) => cfg({ max: +e.target.value })} /></label>
+          <label className="text-sm text-muted">Tolerance (±)<input type="number" min={0} className={cx(field, 'mt-1')} value={q.config.tolerance ?? 0} onChange={(e) => cfg({ tolerance: Math.max(0, +e.target.value || 0) })} /></label>
         </>}
       </div>
       {choice && (
@@ -268,7 +273,7 @@ export function AdminRacePage() {
             {r.questions.map((q) => (
               <li key={q.id} className="panel p-5">
                 <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-                  <span className="sector">Q{q.sequence} · {TYPE_LABEL[q.type]} · {q.weight} pts</span>
+                  <span className="sector">Q{q.sequence} · {TYPE_LABEL[q.type]} · +{q.weight} pts{q.config.penalty ? ` / −${q.config.penalty}` : ''}</span>
                   {canEditKey && (key[q.id] !== undefined ? <Badge tone={keyErrors[q.id] ? 'red' : 'green'}>{keyErrors[q.id] ? 'Check' : 'Set'}</Badge> : <Badge tone="amber">Missing</Badge>)}
                 </div>
                 <p className="mb-4 text-lg font-semibold">{q.prompt}</p>

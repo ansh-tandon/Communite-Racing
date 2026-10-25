@@ -35,12 +35,20 @@ export const PHASE_LABEL: Record<Phase, string> = {
 };
 
 /** The race the app should lead with: the open quiz, else the next upcoming, else the latest result. */
-export function featuredRace(list: RaceSummary[]): RaceSummary | undefined {
-  const byRound = [...list].sort((a, b) => a.round - b.round);
-  return byRound.find((r) => r.phase === 'open')
-    ?? byRound.find((r) => r.phase === 'closed')
-    ?? byRound.find((r) => r.phase === 'upcoming')
-    ?? [...byRound].reverse().find((r) => r.phase === 'results');
+/** The race to put front and centre, by time rather than round number (a practice quiz can have any round):
+ *  1. a race that's live or just finished: locked within the last 12 hours and not published yet
+ *  2. the open quiz that locks soonest
+ *  3. the quiz that opens soonest
+ *  4. an older locked quiz still awaiting results, then the latest results */
+export function featuredRace(list: RaceSummary[], now: Date = new Date()): RaceSummary | undefined {
+  const t = (iso: string) => new Date(iso).getTime();
+  const by = (k: 'quiz_opens_at' | 'quiz_closes_at', dir = 1) => (a: RaceSummary, b: RaceSummary) => dir * (t(a[k]) - t(b[k]));
+  const closed = list.filter((r) => r.phase === 'closed').sort(by('quiz_closes_at', -1));
+  return closed.find((r) => now.getTime() - t(r.quiz_closes_at) < 12 * 3600_000)
+    ?? list.filter((r) => r.phase === 'open').sort(by('quiz_closes_at'))[0]
+    ?? list.filter((r) => r.phase === 'upcoming').sort(by('quiz_opens_at'))[0]
+    ?? closed[0]
+    ?? list.filter((r) => r.phase === 'results').sort(by('quiz_closes_at', -1))[0];
 }
 
 export const initials = (name: string) => name.split(/\s+/).map((p) => p[0]).join('').slice(0, 2).toUpperCase();

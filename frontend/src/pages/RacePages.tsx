@@ -101,7 +101,7 @@ function Results({ race }: { race: RaceDetail }) {
           const pts = r.points_by_question[q.id] ?? 0;
           return (
             <li key={q.id} className="panel-2 grid grid-cols-[auto_1fr_auto] items-center gap-4 p-4">
-              <span className={cx('h-3 w-3 rounded-full', pts === q.weight ? 'bg-ok' : pts ? 'bg-warn' : 'bg-surface3')} aria-label={pts === q.weight ? 'Correct' : pts ? 'Partly correct' : 'Not correct'} />
+              <span className={cx('h-3 w-3 rounded-full', pts === q.weight ? 'bg-ok' : pts > 0 ? 'bg-warn' : 'bg-surface3')} aria-label={pts === q.weight ? 'Correct' : pts > 0 ? 'Partly correct' : 'Not correct'} />
               <span className="min-w-0">
                 <span className="block font-semibold">{q.prompt}</span>
                 <span className="mt-1 flex flex-wrap gap-x-5 text-sm text-muted"><span>You: <b className="font-medium text-ink">{formatValue(q, race.my_answers[q.id])}</b></span><span>Result: <b className="font-medium text-ink">{formatValue(q, r.answer_key[q.id])}</b></span></span>
