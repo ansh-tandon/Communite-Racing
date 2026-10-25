@@ -1,6 +1,6 @@
 import { Check, ChevronUp, Minus, Plus, X } from 'lucide-react';
 import type { AnswerValue, Question } from '../api/types';
-import { driver, isDriverList, optionLabel } from '../fixtures/drivers';
+import { driver, isDriverList, isTeamList, optionLabel, team } from '../fixtures/drivers';
 import { cx } from './ui';
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -19,6 +19,7 @@ export function describe(q: Question): string {
 }
 
 function describeType(q: Question): string {
+  if (q.type === 'multi' && q.config.pick === 1) return 'Choose one.';
   if (q.type === 'multi') return `Choose ${q.config.pick}. Order doesn't matter${q.config.scoring === 'all' ? '; all must be right to score' : '; each correct pick scores'}.`;
   if (q.type === 'ranked') return `Choose ${q.config.pick} in order${q.config.scoring === 'all' ? '; the whole order must be right' : '; points for each one in the right place'}.`;
   if (q.type === 'number') return q.config.tolerance ? `Within ${q.config.tolerance} either side scores full points.` : 'Exact number to score.';
@@ -55,13 +56,52 @@ export function DriverCard({ code, selected, marker, disabled, onClick, state }:
       <span className="min-w-0 flex-1">
         {/* surname only on phones; the full name is still read out */}
         <span className="block truncate text-[15px] font-semibold leading-tight">
-          {rest.length ? <><span className="max-sm:sr-only">{first} </span>{rest.join(' ')}</> : first}
+          {d && rest.length ? <><span className="max-sm:sr-only">{first} </span>{rest.join(' ')}</> : d ? first : code}
         </span>
         {d && <span className="mt-0.5 block truncate text-xs text-muted">{code} · {d.team}</span>}
       </span>
       {marker ? <span className="grid h-7 min-w-7 shrink-0 place-items-center rounded-md bg-accent px-1.5 font-display text-sm font-bold text-white">{marker}</span>
         : selected ? <Check className="h-5 w-5 shrink-0 text-accent-hi" aria-hidden /> : null}
     </button>
+  );
+}
+
+/** A constructor, styled like a driver card: team colour, badge, and its two drivers. */
+export function TeamCard({ name, selected, disabled, onClick, state }: {
+  name: string; selected: boolean; disabled?: boolean; onClick?: () => void; state?: 'correct' | 'wrong';
+}) {
+  const t = team(name);
+  return (
+    <button type="button" onClick={onClick} disabled={disabled} aria-pressed={selected}
+      style={{ ['--team' as string]: t?.color ?? '#5E6672' }}
+      className={cx(
+        'relative flex min-h-[60px] items-center gap-3 overflow-hidden rounded-lg border py-2 pl-3.5 pr-2.5 text-left transition-[border-color,background-color,transform,opacity] duration-150 active:scale-[.98]',
+        'before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-[var(--team)]',
+        selected ? 'animate-pop border-accent bg-accent/[.09]' : 'border-line bg-surface hover:border-faint hover:bg-surface2',
+        state === 'correct' && 'border-ok bg-ok/10', state === 'wrong' && !selected && 'opacity-45',
+        disabled && 'cursor-default active:scale-100',
+      )}>
+      <span aria-hidden className="grid h-9 w-11 shrink-0 place-items-center rounded-md border font-display text-[13px] font-black italic tracking-wider text-[var(--team)]"
+        style={{ borderColor: `${t?.color ?? '#5E6672'}80`, background: `${t?.color ?? '#5E6672'}26` }}>{t?.short ?? '—'}</span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[15px] font-semibold leading-tight">{name}</span>
+        {t && <span className="mt-0.5 block truncate text-xs text-muted">{t.drivers.join(' · ')}</span>}
+      </span>
+      {selected && <Check className="h-5 w-5 shrink-0 text-accent-hi" aria-hidden />}
+    </button>
+  );
+}
+
+function TeamGrid({ options, isSelected, onPick, disabled, keyValue }: {
+  options: string[]; isSelected: (c: string) => boolean; onPick: (c: string) => void; disabled?: boolean; keyValue?: AnswerValue;
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-2 lg:grid-cols-3" role="group">
+      {options.map((c) => {
+        const correct = keyValue !== undefined && (Array.isArray(keyValue) ? keyValue.includes(c) : keyValue === c);
+        return <TeamCard key={c} name={c} selected={isSelected(c)} disabled={disabled} onClick={() => onPick(c)} state={keyValue !== undefined ? (correct ? 'correct' : 'wrong') : undefined} />;
+      })}
+    </div>
   );
 }
 
@@ -181,10 +221,13 @@ export function QuestionRenderer({ q, value, onChange, disabled, keyValue, isKey
   keyValue?: AnswerValue;
 }) {
   const drivers = isDriverList(q.options);
+  const teams = !drivers && isTeamList(q.options);
   switch (q.type) {
     case 'single':
       return drivers
         ? <DriverGrid options={q.options} isSelected={(c) => value === c} onPick={(c) => onChange(value === c ? null : c)} disabled={disabled} keyValue={keyValue} />
+        : teams
+        ? <TeamGrid options={q.options} isSelected={(c) => value === c} onPick={(c) => onChange(value === c ? null : c)} disabled={disabled} keyValue={keyValue} />
         : <div className="grid gap-2 sm:grid-cols-2">{q.options.map((o, i) => <AnswerOption key={o} label={o} marker={LETTERS[i]} selected={value === o} disabled={disabled} onClick={() => onChange(value === o ? null : o)} />)}</div>;
     case 'multi': {
       const list = (value as string[] | undefined) ?? [];
@@ -201,6 +244,8 @@ export function QuestionRenderer({ q, value, onChange, disabled, keyValue, isKey
           </p>
           {drivers
             ? <DriverGrid options={q.options} isSelected={(c) => list.includes(c)} onPick={toggle} disabled={disabled} keyValue={keyValue} />
+            : teams
+            ? <TeamGrid options={q.options} isSelected={(c) => list.includes(c)} onPick={toggle} disabled={disabled} keyValue={keyValue} />
             : <div className="grid gap-2 sm:grid-cols-2">{q.options.map((o, i) => <AnswerOption key={o} label={o} marker={LETTERS[i]} selected={list.includes(o)} disabled={disabled} onClick={() => toggle(o)} />)}</div>}
         </div>
       );

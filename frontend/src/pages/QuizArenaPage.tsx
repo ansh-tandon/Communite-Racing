@@ -202,8 +202,8 @@ function Arena({ race }: { race: RaceDetail }) {
           <article key={q.id} className="animate-rise md:rounded-xl md:border md:border-line md:bg-surface/40 md:p-8" aria-labelledby={`q-${q.id}`}>
             <div className="mb-3 flex flex-wrap items-center gap-2">
               <span className="sector">{TYPE_LABEL[q.type]}</span>
-              <span className="num rounded-sm bg-accent/15 px-1.5 py-0.5 font-display text-[13px] font-bold uppercase tracking-wider text-[#FF5A52]">+{q.weight} pts</span>
-              {penaltyLabel(q) && <span className="num rounded-sm border border-line px-1.5 py-0.5 font-display text-[13px] font-bold uppercase tracking-wider text-muted">{penaltyLabel(q)} if wrong</span>}
+              <span className="num rounded-md border border-ok/50 bg-ok/15 px-2 py-0.5 font-display text-[15px] font-black uppercase tracking-wider text-ok">+{q.weight} pts</span>
+              {penaltyLabel(q) && <span className="num rounded-md border border-accent/60 bg-accent/15 px-2 py-0.5 font-display text-[15px] font-black uppercase tracking-wider text-[#FF5A52]">{penaltyLabel(q)} if wrong</span>}
             </div>
             <h2 id={`q-${q.id}`} className="max-w-3xl text-[26px] font-bold leading-[1.15] tracking-tight sm:text-[34px]">{q.prompt}</h2>
             {describe(q) && <p className="mt-2 max-w-2xl text-[15px] text-muted">{describe(q)}</p>}

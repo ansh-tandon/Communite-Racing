@@ -37,4 +37,29 @@ export function optionLabel(option: string): string {
   return BY_CODE.get(option)?.name ?? option;
 }
 
-export const isDriverList = (options: string[]) => options.length > 0 && options.every((o) => BY_CODE.has(o));
+/** Drivers, plus at most two extra choices such as "No retirements" or "Nobody": shown as driver cards. */
+export const isDriverList = (options: string[]) => {
+  const drivers = options.filter((o) => BY_CODE.has(o)).length;
+  return drivers >= 2 && options.length - drivers <= 2;
+};
+
+// ---------- teams ----------
+
+export interface TeamInfo { name: string; short: string; color: string; drivers: string[] }
+
+const TEAM_SHORT: Record<string, string> = {
+  McLaren: 'MCL', 'Red Bull': 'RBR', Ferrari: 'FER', Mercedes: 'MER', 'Aston Martin': 'AMR', Williams: 'WIL',
+  Alpine: 'ALP', Haas: 'HAA', Audi: 'AUD', 'Racing Bulls': 'RB', Cadillac: 'CAD',
+};
+
+/** A team's colour, short badge and drivers, by the name questions use ("Red Bull", "Haas"…). */
+export function team(name: string): TeamInfo | null {
+  if (!(name in TEAM_COLOR)) return null;
+  return { name, short: TEAM_SHORT[name] ?? name.slice(0, 3).toUpperCase(), color: TEAM_COLOR[name], drivers: ROWS.filter((r) => r[2] === name).map((r) => r[0]) };
+}
+
+/** Teams, plus at most two extra choices: shown as team cards. */
+export const isTeamList = (options: string[]) => {
+  const teams = options.filter((o) => o in TEAM_COLOR).length;
+  return teams >= 2 && options.length - teams <= 2;
+};
