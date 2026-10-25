@@ -165,27 +165,6 @@ export function LiveBoard({ raceId, initialView = 'quiz' }: { raceId: number; in
           })}
         </ol>
       )}
-      {l.results && l.results.length > 0 && (
-        <details className="group rounded-xl border border-line bg-bg/40" open>
-          <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold">
-            <span>Live results <span className="font-normal text-muted">· what each question is scoring against now</span></span>
-            <span className="text-muted transition group-open:rotate-180" aria-hidden>▾</span>
-          </summary>
-          <ol className="divide-y divide-line border-t border-line">
-            {l.results.map((x) => (
-              <li key={x.question_id} className="grid grid-cols-[28px_1fr_auto] items-center gap-3 px-4 py-2.5">
-                <span className="num font-display text-sm font-bold text-faint">{two(x.sequence)}</span>
-                <span className="min-w-0">
-                  <span className="block truncate text-[13px] text-muted">{x.prompt}</span>
-                  <span className="block truncate font-semibold">{x.value === null ? <span className="font-normal text-faint">Waiting for the result</span> : formatValue({ ...x, id: x.question_id } as never, x.value)}</span>
-                </span>
-                {x.value === null ? <span className="text-xs text-faint">—</span>
-                  : x.live ? <Badge tone="green" dot>Live</Badge> : <Badge tone="grey">Final</Badge>}
-              </li>
-            ))}
-          </ol>
-        </details>
-      )}
       <p className="text-xs text-faint">Provisional: points use the results known so far and can change until results are published.</p>
     </div>
   );
