@@ -77,3 +77,5 @@ MEXICO_GP_2026: list[dict] = [_for_mexico(q) for q in US_GP_2026]
 # Q9 replaced: "outside the top 10 into the top 10" can end with nobody, as in Austin. This one always has an answer.
 MEXICO_GP_2026[8] = {"prompt": "Will both Ferraris finish in the top 5?", "type": "yes_no", "weight": 10,
                      "config": {"penalty": 3}, "auto": {"rule": "team_both_in_top", "team": "Ferrari", "n": 5}}
+# Q10 reworded: the same count, said plainly (0 to 3 of the podium started 4th or lower)
+MEXICO_GP_2026[9] = {**MEXICO_GP_2026[9], "prompt": "🥉 How many drivers starting 4th or lower on the grid will finish on the podium?"}
