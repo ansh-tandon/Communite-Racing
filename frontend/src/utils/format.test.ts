@@ -25,6 +25,13 @@ describe('featuredRace', () => {
   it('moves on to the next quiz once results are published', () => {
     expect(featuredRace([fp1('results'), usgp('results'), mexico('open')], at('2026-10-26T03:00:00Z'))?.id).toBe(5);
   });
+  it("shows the next race even when a later race's quiz opens first", () => {
+    // 1 Nov: Mexico locks at 20:00 UTC and opens at 18:30; São Paulo's quiz (8 Nov) opens earlier, at 17:00
+    const mx = race(5, 19, 'upcoming', '2026-11-01T18:30:00Z', '2026-11-01T20:00:00Z');
+    const sp = (phase: RaceSummary['phase']) => race(6, 20, phase, '2026-11-01T17:00:00Z', '2026-11-08T17:00:00Z');
+    expect(featuredRace([usgp('results'), mx, sp('upcoming')], at('2026-11-01T16:00:00Z'))?.id).toBe(5);
+    expect(featuredRace([usgp('results'), mx, sp('open')], at('2026-11-01T17:30:00Z'))?.id).toBe(5);
+  });
   it('falls back to the latest results when nothing else is on', () => {
     expect(featuredRace([fp1('results'), usgp('results')], at('2026-12-20T00:00:00Z'))?.id).toBe(4);
   });

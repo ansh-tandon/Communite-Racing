@@ -45,8 +45,8 @@ export function featuredRace(list: RaceSummary[], now: Date = new Date()): RaceS
   const by = (k: 'quiz_opens_at' | 'quiz_closes_at', dir = 1) => (a: RaceSummary, b: RaceSummary) => dir * (t(a[k]) - t(b[k]));
   const closed = list.filter((r) => r.phase === 'closed').sort(by('quiz_closes_at', -1));
   return closed.find((r) => now.getTime() - t(r.quiz_closes_at) < 12 * 3600_000)
-    ?? list.filter((r) => r.phase === 'open').sort(by('quiz_closes_at'))[0]
-    ?? list.filter((r) => r.phase === 'upcoming').sort(by('quiz_opens_at'))[0]
+    // the next race to happen (earliest lights out), whether its quiz has opened yet or not
+    ?? list.filter((r) => r.phase === 'open' || r.phase === 'upcoming').sort(by('quiz_closes_at'))[0]
     ?? closed[0]
     ?? list.filter((r) => r.phase === 'results').sort(by('quiz_closes_at', -1))[0];
 }
