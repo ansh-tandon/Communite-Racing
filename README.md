@@ -28,7 +28,7 @@ Works on **iPhone (Safari)**, **Android (Chrome)** and **desktop**, and installs
 ## Contents
 
 - [What players do](#what-players-do)
-- [Screenshots](#screenshots): [Android](#android) · [iPhone](#iphone-ios) · [Desktop](#desktop)
+- [Screenshots](#screenshots): [Android](#android) · [iPhone](#iphone-ios) · [Desktop](#desktop) · [Halloween Theme](#halloween-theme)
 - [Runs everywhere](#runs-everywhere)
 - [Project structure](#project-structure)
 - [Quick start (demo, no backend)](#quick-start-demo-no-backend)
@@ -46,8 +46,10 @@ Works on **iPhone (Safari)**, **Android (Chrome)** and **desktop**, and installs
    tap saves straight away. There is no submit button.
 3. **Get a Prediction Pass.** A ticket that lists every pick. Tap any line to change it until lights out.
 4. **Answers lock at lights out.** The server refuses late answers, whatever the device clock says.
-5. **Climb the standings.** After the race an admin enters the results, the server scores every pass, and
-   the championship table updates with position changes, ties and a podium.
+5. **Watch it live, then see the results.** From lights out the leaderboard shows provisional points from live
+   OpenF1 data, updated every 20 seconds. After the race an admin publishes the results and the race's leaderboard
+   shows final points, ties and a podium. Each race is its own competition: points don't carry over between races
+   (`STANDALONE_RACES=false` brings back a season championship).
 
 Highlights:
 
@@ -56,6 +58,7 @@ Highlights:
 - A timing-tower leaderboard with search, "Find me" and your own row pinned in view
 - Every date and time shown in Indian Standard Time
 - Respects "Reduce motion" on every platform
+- Seasonal themes that switch on and off by date, like the [Halloween Theme](#halloween-theme)
 
 ## Screenshots
 
@@ -98,6 +101,47 @@ All screenshots were taken from the built-in demo mode, so the names and scores 
 | <img src="docs/screenshots/desktop-pass.jpg" alt="Desktop: Prediction Pass" /> | <img src="docs/screenshots/desktop-leaderboard.jpg" alt="Desktop: podium and timing tower" /> |
 
 <sub>1440 × 900 browser window.</sub>
+
+### Halloween Theme
+
+For the Mexico City Grand Prix weekend, which falls on Halloween and Día de los Muertos, the whole site dresses up
+from **31 October to 3 November** (India time) and goes back to Formula 1 red by itself on 4 November.
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/halloween/phone-login.jpg" width="200" alt="Halloween Theme, phone: sign in with papel picado and cobwebs" /><br /><sub>Sign in</sub></td>
+    <td align="center"><img src="docs/screenshots/halloween/phone-home.jpg" width="200" alt="Halloween Theme, phone: Home with the Mexico City GP" /><br /><sub>Home</sub></td>
+    <td align="center"><img src="docs/screenshots/halloween/phone-quiz.jpg" width="200" alt="Halloween Theme, phone: a quiz question" /><br /><sub>Quiz</sub></td>
+    <td align="center"><img src="docs/screenshots/halloween/phone-leaderboard.jpg" width="200" alt="Halloween Theme, phone: leaderboard" /><br /><sub>Leaderboard</sub></td>
+  </tr>
+</table>
+
+| Sign in | Home |
+|---|---|
+| <img src="docs/screenshots/halloween/desktop-login.jpg" alt="Halloween Theme, desktop: sign in" /> | <img src="docs/screenshots/halloween/desktop-home.jpg" alt="Halloween Theme, desktop: Home with the glowing race title" /> |
+| **Quiz** | **Leaderboard** |
+| <img src="docs/screenshots/halloween/desktop-quiz.jpg" alt="Halloween Theme, desktop: a quiz question" /> | <img src="docs/screenshots/halloween/desktop-leaderboard.jpg" alt="Halloween Theme, desktop: leaderboard with bats and fog" /> |
+
+<sub>Demo mode, so the names and scores are sample data (the demo leaderboard adds races up; the live site shows one race at a time).</sub>
+
+What changes:
+
+| | |
+|---|---|
+| **Papel picado** | A string of cut-paper flags with skull cut-outs under the top bar on every page, drifting sideways while each flag sways |
+| **Colours** | Magenta replaces F1 red for buttons and highlights, with a faint purple and marigold glow behind every page |
+| **Bats, cobwebs, fog** | Bats fly across, cobwebs hang in the top corners and mist drifts along the bottom. They sit behind the cards, and are left out of the quiz screen so they never distract from answering |
+| **Candle glow** | Race titles glow magenta and orange and flicker faintly |
+| **Mexico tag** | "🎃 Halloween × Día de los Muertos 💀" under the Mexico City GP on the Home screen |
+
+With "Reduce motion" on, the flags stay still and the bats are hidden. Only colours and decorations change: the
+layout, the quiz and scoring are the same.
+
+How it works: [`frontend/src/lib/season.ts`](frontend/src/lib/season.ts) picks the theme by date and sets
+`<html data-season="muertos">`; the colours are CSS variables in
+[`frontend/src/styles/index.css`](frontend/src/styles/index.css), and the decorations are in
+[`frontend/src/components/seasonal.tsx`](frontend/src/components/seasonal.tsx). To change the dates or add another
+theme, edit `seasonAt()`.
 
 ## Runs everywhere
 
