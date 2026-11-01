@@ -3,6 +3,7 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import func, select
 
+from app.core.config import get_settings
 from app.core.deps import CurrentUser, Session
 from app.models import Answer, Question, Race, Score, Submission
 from app.schemas import (
@@ -17,7 +18,8 @@ from app.schemas import (
     SeasonStandings,
 )
 from app.services.races import my_answers, questions_by_id, save_answers
-from app.services.results import answer_key, entry_count, live_leaderboard, race_leaderboard, rules, season_standings
+from app.services.results import (answer_key, entry_count, latest_published_race, live_leaderboard, race_leaderboard, rules,
+                                  season_standings)
 from app.services.scoring import max_points, score_answer
 
 router = APIRouter(tags=["quiz"])
@@ -129,4 +131,6 @@ async def standings(user: CurrentUser, s: Session, season: int | None = None) ->
     """Season totals across published races. Not live: it moves only when a race is published."""
     if season is None:
         season = await s.scalar(select(func.max(Race.season)).where(Race.status != "draft")) or datetime.now().year
-    return SeasonStandings(season=season, rows=await season_standings(s, season))
+    standalone = get_settings().standalone_races
+    return SeasonStandings(season=season, rows=await season_standings(s, season), standalone=standalone,
+                           race_id=await latest_published_race(s, season) if standalone else None)

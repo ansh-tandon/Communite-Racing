@@ -17,8 +17,12 @@ export function LeaderboardPage() {
   const races = useRaces();
   // the latest scored round of this season: what "after round N" and the +/− column refer to
   const scored = (races.data ?? []).filter((r) => r.phase === 'results' && r.season === s.data?.season);
-  const latest = scored.reduce<(typeof scored)[number] | undefined>((a, r) => (!a || r.round > a.round ? r : a), undefined);
-  const lastRound = useRaceLeaderboard(latest?.id ?? NaN, !!latest && scored.length > 1);
+  const standalone = !!s.data?.standalone;
+  const latest = standalone
+    ? scored.find((r) => r.id === s.data?.race_id)
+    : scored.reduce<(typeof scored)[number] | undefined>((a, r) => (!a || r.round > a.round ? r : a), undefined);
+  // movement compares two rounds of a season; races that stand alone have none
+  const lastRound = useRaceLeaderboard(latest?.id ?? NaN, !standalone && !!latest && scored.length > 1);
   // a race that locked in the last 12 hours and isn't published yet: its provisional standings go live at the top
   // (an old quiz left unscored never takes over)
   const live = (races.data ?? [])
@@ -48,14 +52,14 @@ export function LeaderboardPage() {
           </div>
           <Link to={`/races/${live.id}?tab=leaderboard`} className="flex items-center gap-1 text-sm font-semibold text-muted hover:text-ink">Race page<ArrowRight className="h-4 w-4" aria-hidden /></Link>
         </div>
-        <LiveBoard raceId={live.id} initialView="season" />
+        <LiveBoard raceId={live.id} initialView={s.data?.standalone ? 'quiz' : 'season'} />
       </section>
     )}
     <div className="lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-12">
       <div className="space-y-6 lg:sticky lg:top-24">
         <header>
-          <p className="sector">{s.data.season} Championship{latest && ` · after round ${latest.round}`}</p>
-          <h1 className="mt-1 font-display text-[44px] font-black uppercase leading-[0.9] sm:text-6xl">Standings</h1>
+          <p className="sector">{standalone ? (latest ? `Round ${latest.round} · ${latest.name}` : 'Latest race') : <>{s.data.season} Championship{latest && ` · after round ${latest.round}`}</>}</p>
+          <h1 className="mt-1 font-display text-[44px] font-black uppercase leading-[0.9] sm:text-6xl">{standalone ? 'Race leaderboard' : 'Standings'}</h1>
         </header>
 
         {rows.length > 0 && (

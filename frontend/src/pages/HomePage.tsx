@@ -16,7 +16,7 @@ export function UserStats() {
   return (
     <div className="panel relative overflow-hidden p-5">
       <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-accent via-accent/50 to-transparent" />
-      <p className="sector">Your championship · {s.data.season}</p>
+      <p className="sector">{s.data.standalone ? 'Your latest race' : `Your championship · ${s.data.season}`}</p>
       {row ? (<>
         <div className="mt-3 flex items-end justify-between">
           <div>

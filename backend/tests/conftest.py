@@ -19,6 +19,7 @@ os.environ["RESEND_API_KEY"] = ""
 os.environ["ADMIN_EMAILS"] = "admin@example.com"
 os.environ["FRONTEND_ORIGIN"] = "http://testserver"
 os.environ["GOOGLE_CLIENT_ID"] = "test-client.apps.googleusercontent.com"
+os.environ["STANDALONE_RACES"] = "false"  # tests cover season totals; standalone races have their own tests
 
 import logging  # noqa: E402
 

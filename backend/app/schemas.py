@@ -154,6 +154,7 @@ class LiveLeaderboard(BaseModel):
     results: list[LiveResult] = []
     rows: list[LeaderRow]
     season_rows: list[LiveSeasonRow]
+    standalone: bool = False  # each race stands alone: season_rows are this race only
 
 
 class SeasonRow(BaseModel):
@@ -169,6 +170,8 @@ class SeasonRow(BaseModel):
 class SeasonStandings(BaseModel):
     season: int
     rows: list[SeasonRow]
+    standalone: bool = False  # rows are the latest published race only, not season totals
+    race_id: int | None = None  # with standalone races: the race the rows are for
 
 
 # ---------- admin ----------

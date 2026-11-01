@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from sqlalchemy import update
 
+from app.core.config import get_settings
 from app.core.db import SessionLocal
 from app.models import Race
 from app.question_sets import US_GP_2026_FP1
@@ -103,3 +104,33 @@ async def test_questions_answered_by_hand_dont_break_the_sync(make_race, client,
     r = await client.post(f"/admin/races/{race['id']}/openf1/sync", headers=admin, json={})
     assert r.status_code == 200, r.text
     assert [q["sequence"] for q in r.json()["questions"]] == [1]  # only the auto-answered question is read
+
+
+async def test_standalone_races_never_add_up(make_race, client, admin, login, use_openf1, monkeypatch):
+    use_openf1(FakeOpenF1())
+    first = await make_race(round=1, questions=QS)
+    a, b = await two_players(client, login, first)
+    await lock_at(first["id"])
+    await client.post(f"/admin/races/{first['id']}/openf1/sync", headers=admin, json={})
+    await client.post(f"/admin/races/{first['id']}/score", headers=admin)  # published: Alice 15, Bob -2
+
+    monkeypatch.setattr(get_settings(), "standalone_races", True)
+    second = await make_race(round=2, questions=QS)
+    q = [x["id"] for x in second["questions"]]
+    await client.put(f"/races/{second['id']}/answers", headers=b, json={"answers": {str(q[0]): "VER", str(q[1]): True, str(q[2]): 19}})
+    await lock_at(second["id"], SINGAPORE_START + timedelta(hours=1))
+    use_openf1(FakeOpenF1())
+    await client.post(f"/admin/races/{second['id']}/openf1/link", headers=admin, json={"session_key": FakeOpenF1().race_key})
+    await client.post(f"/admin/races/{second['id']}/openf1/sync", headers=admin, json={})
+
+    live = (await client.get(f"/races/{second['id']}/live", headers=a)).json()
+    assert live["standalone"] and [(r["points"], r["race_points"], r["prev_rank"]) for r in live["season_rows"]] == [(15, 15, None)]
+    before = (await client.get("/standings", headers=a)).json()
+    assert before["race_id"] == first["id"] and [r["points"] for r in before["rows"]] == [15, -2]  # still the first race
+
+    await client.post(f"/admin/races/{second['id']}/score", headers=admin)
+    after = (await client.get("/standings", headers=a)).json()
+    assert after["standalone"] and after["race_id"] == second["id"]
+    assert [(r["points"], r["races"]) for r in after["rows"]] == [(15, 1)]  # Bob's -2 from race 1 isn't carried over
+    first_board = (await client.get(f"/races/{first['id']}/leaderboard", headers=a)).json()
+    assert [r["points"] for r in first_board["rows"]] == [15, -2]  # the first race's results are kept

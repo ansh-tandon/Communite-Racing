@@ -12,6 +12,7 @@ from sqlalchemy import and_, case, delete, func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.security import utcnow
 from app.models import Answer, AnswerKey, Question, Race, Score, Submission, User
 from app.services.questions import Invalid, validate_value
@@ -226,7 +227,8 @@ async def live_leaderboard(s: AsyncSession, race: Race) -> dict:
     names = dict((await s.execute(select(User.id, display_name()).where(User.id.in_([r.user_id for r in results])))).all())
     updated = await s.scalar(select(func.max(AnswerKey.entered_at)).where(AnswerKey.race_id == race.id))
 
-    season = {r["user_id"]: r for r in await season_standings(s, race.season)}
+    # standalone races: the "season" view is just this race, nothing carried over
+    season = {} if get_settings().standalone_races else {r["user_id"]: r for r in await season_standings(s, race.season)}
     race_points = {r.user_id: r.points for r in results}
     combined = [
         {"user_id": uid, "name": season[uid]["name"] if uid in season else names.get(uid, f"Player {uid}"),
@@ -254,6 +256,7 @@ async def live_leaderboard(s: AsyncSession, race: Race) -> dict:
         "rows": [{"rank": r.rank, "user_id": r.user_id, "name": names.get(r.user_id, f"Player {r.user_id}"),
                   "points": r.points, "correct_count": r.correct_count} for r in results],
         "season_rows": combined,
+        "standalone": get_settings().standalone_races,
     }
 
 
@@ -292,7 +295,14 @@ async def race_leaderboard(s: AsyncSession, race_id: int, limit: int | None = No
     return [dict(r._mapping) for r in await s.execute(q)]
 
 
+async def latest_published_race(s: AsyncSession, season: int) -> int | None:
+    return await s.scalar(select(Race.id).where(Race.season == season, Race.published_at.is_not(None))
+                          .order_by(Race.quiz_closes_at.desc()).limit(1))
+
+
 async def season_standings(s: AsyncSession, season: int) -> list[dict]:
+    """Totals across the season's published races; with standalone races, the latest published race only."""
+    only = await latest_published_race(s, season) if get_settings().standalone_races else None
     total = func.sum(Score.points)
     wins = func.sum(case((Score.rank == 1, 1), else_=0))
     q = (
@@ -307,7 +317,7 @@ async def season_standings(s: AsyncSession, season: int) -> list[dict]:
         )
         .join(User, User.id == Score.user_id)
         .join(Race, Race.id == Score.race_id)
-        .where(Race.season == season, Race.published_at.is_not(None))
+        .where(Race.season == season, Race.published_at.is_not(None), *([Race.id == only] if only else []))
         .group_by(Score.user_id, User.id)
         .order_by(total.desc(), wins.desc(), Score.user_id)
     )

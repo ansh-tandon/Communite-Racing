@@ -116,6 +116,7 @@ export interface LiveLeaderboard {
   results?: LiveResult[];
   rows: LeaderRow[];
   season_rows: LiveSeasonRow[];
+  standalone?: boolean; // each race stands alone: no season view
 }
 
 export interface SeasonRow {
@@ -131,6 +132,8 @@ export interface SeasonRow {
 export interface SeasonStandings {
   season: number;
   rows: SeasonRow[];
+  standalone?: boolean; // rows are the latest published race only, not season totals
+  race_id?: number | null; // with standalone races: the race the rows are for
 }
 
 // ---------- admin ----------

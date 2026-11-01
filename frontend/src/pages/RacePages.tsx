@@ -124,6 +124,7 @@ export function LiveBoard({ raceId, initialView = 'quiz' }: { raceId: number; in
   if (live.isPending) return <Skeleton className="h-72" />;
   if (live.isError) return <ErrorState error={live.error} onRetry={() => live.refetch()} />;
   const l = live.data;
+  const shown = l.standalone ? 'quiz' : view; // races that stand alone have no season view
   const final = l.results_in === l.questions && l.live_results === 0;
   const me = (id: number) => id === user?.id;
   const row = 'grid grid-cols-[40px_1fr_auto] items-center gap-3 rounded-xl px-3 py-2.5';
@@ -133,12 +134,12 @@ export function LiveBoard({ raceId, initialView = 'quiz' }: { raceId: number; in
         <Badge tone={final ? 'grey' : 'green'} dot={!final}><Radio className="h-3.5 w-3.5" aria-hidden />{final ? 'Provisional · awaiting publish' : 'Live · provisional'}</Badge>
         <span className="text-sm text-muted">{l.results_in} of {l.questions} results in{l.live_results ? ` (${l.live_results} still live)` : ''}{l.updated_at ? ` · updated ${fmtTime(l.updated_at)}` : ''}</span>
       </div>
-      <div className="flex gap-1" role="tablist" aria-label="Live standings">
+      {!l.standalone && <div className="flex gap-1" role="tablist" aria-label="Live standings">
         {([['quiz', 'This race'], ['season', 'Season']] as const).map(([k, label]) => (
           <button key={k} role="tab" aria-selected={view === k} onClick={() => setView(k)} className={cx('rounded-lg px-3 py-1.5 text-sm font-semibold', view === k ? 'bg-ink text-bg' : 'text-muted hover:bg-surface')}>{label}</button>
         ))}
-      </div>
-      {l.rows.length === 0 ? <EmptyState icon={Trophy} title="Nobody entered this quiz" body="Live standings appear for players who made predictions." /> : view === 'quiz' ? (
+      </div>}
+      {l.rows.length === 0 ? <EmptyState icon={Trophy} title="Nobody entered this quiz" body="Live standings appear for players who made predictions." /> : shown === 'quiz' ? (
         <ol className="space-y-1">
           {l.rows.map((r) => (
             <li key={r.user_id} className={cx(row, me(r.user_id) ? 'bg-accent/[.09] ring-1 ring-accent/40' : 'odd:bg-surface/60')}>

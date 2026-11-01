@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     openf1_final_interval_seconds: int = 120  # waiting for the official classification
     openf1_followup_hours: int = 6  # keep re-checking after the flag (post-race penalties)
 
+    # Each race stands alone: the Leaderboard page shows the latest published race, and points never add up
+    # across races. Every race's scores stay stored. False = a season championship (totals across races).
+    standalone_races: bool = True
+
     @property
     def frontend_origin_list(self) -> list[str]:
         # Comma-separated, e.g. the onrender.com URL plus a custom domain.
