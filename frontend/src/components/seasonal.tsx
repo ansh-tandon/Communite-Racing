@@ -4,9 +4,10 @@ import { season } from '../lib/season';
 // Papel picado: a string of cut-paper flags across the top of the page for Día de Muertos.
 const FLAGS = ['#D61F7A', '#F5A524', '#8B4FD8', '#1FB6A6', '#F0489C', '#F5A524'];
 
-function Flag({ x, color }: { x: number; color: string }) {
+function Flag({ x, color, i }: { x: number; color: string; i: number }) {
   return (
     <g transform={`translate(${x} 2)`}>
+      <g className="sway" style={{ animationDelay: `${-(i % 7) * 0.45}s` }}>
       <path d="M0 0h34v22l-4 4-4-4-4 4-4-4-4 4-4-4-4 4-4-4-2 2z" fill={color} />
       {/* the cut-outs: a little skull and petals */}
       <circle cx="17" cy="9" r="4.2" fill="#0B0D10" />
@@ -15,6 +16,7 @@ function Flag({ x, color }: { x: number; color: string }) {
       <path d="M15.5 13.2h3v2.2h-3z" fill="#0B0D10" />
       <circle cx="6" cy="6" r="1.6" fill="#0B0D10" /><circle cx="28" cy="6" r="1.6" fill="#0B0D10" />
       <circle cx="6" cy="16" r="1.2" fill="#0B0D10" /><circle cx="28" cy="16" r="1.2" fill="#0B0D10" />
+      </g>
     </g>
   );
 }
@@ -23,10 +25,15 @@ export function PapelPicado() {
   if (season !== 'muertos') return null;
   return (
     <div aria-hidden className="pointer-events-none h-7 overflow-hidden border-b border-line/60">
-      <svg className="h-7 w-full" preserveAspectRatio="xMinYMin slice" viewBox="0 0 1600 30">
-        <path d="M0 2.5H1600" stroke="#F5A524" strokeOpacity=".5" />
-        {Array.from({ length: 40 }, (_, i) => <Flag key={i} x={i * 40 + 3} color={FLAGS[i % FLAGS.length]} />)}
-      </svg>
+      {/* two identical strings side by side, sliding left by one string's width: an endless loop */}
+      <div className="picado flex w-max">
+        {[0, 1].map((k) => (
+          <svg key={k} className="h-7 w-[1680px] shrink-0" viewBox="0 0 1680 28">
+            <path d="M0 2.5H1680" stroke="#F5A524" strokeOpacity=".5" />
+            {Array.from({ length: 42 }, (_, i) => <Flag key={i} i={i} x={i * 40 + 3} color={FLAGS[i % FLAGS.length]} />)}
+          </svg>
+        ))}
+      </div>
     </div>
   );
 }

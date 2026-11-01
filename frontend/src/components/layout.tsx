@@ -85,7 +85,8 @@ export function AppShell() {
   return (
     // the page leaves room for the phone tab bar (--tabbar: 0 on laptops and while typing)
     <div className="relative isolate min-h-dvh pb-[var(--tabbar)]">
-      <SpookyNight />
+      {/* no bats or cobwebs while someone is answering the quiz */}
+      {!pathname.startsWith('/quiz/') && <SpookyNight />}
       {/* one sticky block that starts below the iPhone status bar / notch; a phone held sideways
           is too short to keep it pinned, so there it scrolls away with the page */}
       <div className="sticky top-0 z-40 bg-bg pt-[env(safe-area-inset-top)] [@media(max-height:500px)]:static">
