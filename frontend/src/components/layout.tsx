@@ -8,7 +8,7 @@ import { useBackToClose } from '../hooks/useBackToClose';
 import { useSoftKeyboard } from '../hooks/useSoftKeyboard';
 import { Avatar, cx } from './ui';
 import Navbar from './ui/navbar-02';
-import { PapelPicado } from './seasonal';
+import { PapelPicado, SpookyNight } from './seasonal';
 
 const NAV = [
   { to: '/', label: 'Home', icon: Home, end: true },
@@ -84,7 +84,8 @@ export function AppShell() {
   useSoftKeyboard();
   return (
     // the page leaves room for the phone tab bar (--tabbar: 0 on laptops and while typing)
-    <div className="min-h-dvh pb-[var(--tabbar)]">
+    <div className="relative isolate min-h-dvh pb-[var(--tabbar)]">
+      <SpookyNight />
       {/* one sticky block that starts below the iPhone status bar / notch; a phone held sideways
           is too short to keep it pinned, so there it scrolls away with the page */}
       <div className="sticky top-0 z-40 bg-bg pt-[env(safe-area-inset-top)] [@media(max-height:500px)]:static">
@@ -92,7 +93,7 @@ export function AppShell() {
         <Navbar logo={<Logo />} items={NAV} actions={<AccountMenu />} />
         <PapelPicado />
       </div>
-      <main className="px-safe mx-auto max-w-7xl pb-16 pt-5 sm:pt-8">
+      <main className="px-safe relative z-[1] mx-auto max-w-7xl pb-16 pt-5 sm:pt-8">
         <Outlet />
       </main>
       {/* phone tab bar: thumb-height targets, clears the home indicator, slides away while typing */}

@@ -41,6 +41,34 @@
       radial-gradient(50rem 26rem at -10% 20%, rgb(245 165 36 / 0.08), transparent 70%);
     background-attachment: fixed;
   }
+  /* Halloween night: bats cross the page, fog drifts along the bottom, race titles glow like a candle */
+  html[data-season='muertos'] .bat { left: -12%; animation: batfly linear infinite; }
+  html[data-season='muertos'] .fog {
+    background:
+      radial-gradient(40% 70% at 20% 100%, rgb(139 79 216 / 0.16), transparent 70%),
+      radial-gradient(35% 60% at 60% 100%, rgb(245 245 245 / 0.06), transparent 70%),
+      radial-gradient(40% 70% at 95% 100%, rgb(214 31 122 / 0.12), transparent 70%);
+    animation: fogdrift 18s ease-in-out infinite alternate;
+  }
+  html[data-season='muertos'] #hero-race, html[data-season='muertos'] h1 {
+    text-shadow: 0 0 18px rgb(214 31 122 / 0.35), 0 0 48px rgb(245 165 36 / 0.18);
+    animation: candle 5s ease-in-out infinite;
+  }
+  @keyframes batfly {
+    0% { transform: translate(0, 0) scaleY(1); }
+    10% { transform: translate(12vw, -18px) scaleY(.55); }
+    20% { transform: translate(24vw, 10px) scaleY(1); }
+    35% { transform: translate(42vw, -26px) scaleY(.55); }
+    50% { transform: translate(60vw, 4px) scaleY(1); }
+    70% { transform: translate(84vw, -20px) scaleY(.55); }
+    100% { transform: translate(125vw, 0) scaleY(1); }
+  }
+  @keyframes fogdrift { from { transform: translateX(-4%); } to { transform: translateX(4%); } }
+  @keyframes candle { 0%, 100% { opacity: 1; } 47% { opacity: 1; } 50% { opacity: .82; } 53% { opacity: 1; } 78% { opacity: .93; } }
+  @media (prefers-reduced-motion: reduce) {
+    html[data-season='muertos'] .bat, html[data-season='muertos'] .fog, html[data-season='muertos'] h1 { animation: none; }
+    html[data-season='muertos'] .bat { display: none; }
+  }
   @media (min-width: 768px) { :root { --tabbar: 0px; } }
   html[data-keyboard='open'] { --tabbar: 0px; }
 
