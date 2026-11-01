@@ -74,3 +74,6 @@ def _for_mexico(q: dict) -> dict:
 
 
 MEXICO_GP_2026: list[dict] = [_for_mexico(q) for q in US_GP_2026]
+# Q9 replaced: "outside the top 10 into the top 10" can end with nobody, as in Austin. This one always has an answer.
+MEXICO_GP_2026[8] = {"prompt": "Will both Ferraris finish in the top 5?", "type": "yes_no", "weight": 10,
+                     "config": {"penalty": 3}, "auto": {"rule": "team_both_in_top", "team": "Ferrari", "n": 5}}

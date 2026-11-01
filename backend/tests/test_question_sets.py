@@ -60,8 +60,12 @@ def test_us_gp_questions_follow_the_league_marking():
 
 
 async def test_mexico_repeats_the_us_gp_questions_with_hirakawa_for_ocon(make_race):
-    same = lambda qs: [(q["type"], q["weight"], q["config"], q["auto"]) for q in qs]  # noqa: E731
+    same = lambda qs: [(q["type"], q["weight"], q["config"], q["auto"]) for q in qs[:8] + qs[9:]]  # noqa: E731
     assert same(MEXICO_GP_2026) == same(US_GP_2026)
+    assert MEXICO_GP_2026[8]["prompt"] == "Will both Ferraris finish in the top 5?"
+    assert (MEXICO_GP_2026[8]["weight"], MEXICO_GP_2026[8]["config"]) == (10, {"penalty": 3})
+    vals = await answers(await race_data(FakeOpenF1()), MEXICO_GP_2026)
+    assert isinstance(vals[8], bool)  # always a yes or a no, live and after the flag
     assert MEXICO_GP_2026[0]["prompt"] == "🏆 Who will win the Mexico City Grand Prix?"
     for q in MEXICO_GP_2026:
         assert "OCO" not in q.get("options", []), q["prompt"]
