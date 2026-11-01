@@ -8,6 +8,7 @@ import { useBackToClose } from '../hooks/useBackToClose';
 import { useSoftKeyboard } from '../hooks/useSoftKeyboard';
 import { Avatar, cx } from './ui';
 import Navbar from './ui/navbar-02';
+import { PapelPicado } from './seasonal';
 
 const NAV = [
   { to: '/', label: 'Home', icon: Home, end: true },
@@ -89,6 +90,7 @@ export function AppShell() {
       <div className="sticky top-0 z-40 bg-bg pt-[env(safe-area-inset-top)] [@media(max-height:500px)]:static">
         <DemoBanner />
         <Navbar logo={<Logo />} items={NAV} actions={<AccountMenu />} />
+        <PapelPicado />
       </div>
       <main className="px-safe mx-auto max-w-7xl pb-16 pt-5 sm:pt-8">
         <Outlet />

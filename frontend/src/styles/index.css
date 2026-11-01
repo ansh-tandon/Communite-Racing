@@ -31,6 +31,16 @@
    * open (useSoftKeyboard), when the tab bar slides away.
    */
   :root { --tabbar: calc(64px + env(safe-area-inset-bottom)); }
+  /* brand accent as RGB channels: Formula 1 red */
+  :root { --accent: 225 6 0; --accent-hi: 255 42 31; --accent-lo: 158 4 0; }
+  /* Día de Muertos (31 Oct to 3 Nov, see lib/season.ts): cempasúchil marigold and magenta papel picado */
+  html[data-season='muertos'] { --accent: 214 31 122; --accent-hi: 240 72 156; --accent-lo: 142 14 80; }
+  html[data-season='muertos'] body {
+    background-image:
+      radial-gradient(60rem 30rem at 85% -10%, rgb(139 79 216 / 0.16), transparent 70%),
+      radial-gradient(50rem 26rem at -10% 20%, rgb(245 165 36 / 0.08), transparent 70%);
+    background-attachment: fixed;
+  }
   @media (min-width: 768px) { :root { --tabbar: 0px; } }
   html[data-keyboard='open'] { --tabbar: 0px; }
 
@@ -40,7 +50,7 @@
   body {
     @apply bg-bg text-ink font-sans antialiased;
   }
-  ::selection { background: #E10600; color: #fff; }
+  ::selection { background: rgb(var(--accent)); color: #fff; }
   :focus-visible { outline: 2px solid #F5F5F5; outline-offset: 2px; border-radius: 6px; }
   /* headings focused by script (after the intro) aren't controls */
   [tabindex="-1"]:focus { outline: none; }
@@ -71,7 +81,7 @@
   .sector { @apply font-display text-[13px] font-semibold uppercase tracking-[0.14em] text-muted; }
 
   /* thin red speed-stripe used under page titles */
-  .stripe { height: 3px; width: 44px; border-radius: 2px; background: linear-gradient(90deg, #E10600, #FF2A1F 60%, transparent); }
+  .stripe { height: 3px; width: 44px; border-radius: 2px; background: linear-gradient(90deg, rgb(var(--accent)), rgb(var(--accent-hi)) 60%, transparent); }
 
   .carbon {
     background-color: #0B0D10;
@@ -89,15 +99,15 @@
   .range { -webkit-appearance: none; appearance: none; height: 44px; background: transparent; cursor: pointer; }
   .range::-webkit-slider-runnable-track {
     height: 4px; border-radius: 2px;
-    background: linear-gradient(to right, var(--fill, #E10600) var(--pct, 50%), #262E39 var(--pct, 50%));
+    background: linear-gradient(to right, var(--fill, rgb(var(--accent))) var(--pct, 50%), #262E39 var(--pct, 50%));
   }
   .range::-webkit-slider-thumb {
     -webkit-appearance: none; width: 24px; height: 24px; margin-top: -10px; border-radius: 50%;
-    background: #F5F5F5; border: 5px solid var(--fill, #E10600);
+    background: #F5F5F5; border: 5px solid var(--fill, rgb(var(--accent)));
   }
   .range::-moz-range-track { height: 4px; border-radius: 2px; background: #262E39; }
-  .range::-moz-range-progress { height: 4px; border-radius: 2px; background: var(--fill, #E10600); }
-  .range::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #F5F5F5; border: 5px solid var(--fill, #E10600); }
+  .range::-moz-range-progress { height: 4px; border-radius: 2px; background: var(--fill, rgb(var(--accent))); }
+  .range::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #F5F5F5; border: 5px solid var(--fill, rgb(var(--accent))); }
   .range:disabled { cursor: default; opacity: 0.45; }
 
   .skeleton {

@@ -13,7 +13,10 @@ export default {
         surface2: '#1B2129',
         surface3: '#232A34',
         line: '#262E39',
-        accent: { DEFAULT: '#E10600', hi: '#FF2A1F', lo: '#9E0400' },
+        // accent colours are CSS variables (styles/index.css), so a seasonal theme can swap them
+        accent: { DEFAULT: 'rgb(var(--accent) / <alpha-value>)', hi: 'rgb(var(--accent-hi) / <alpha-value>)', lo: 'rgb(var(--accent-lo) / <alpha-value>)' },
+        marigold: '#F5A524',
+        violet: '#8B4FD8',
         ink: '#F5F5F5',
         muted: '#9299A3',
         faint: '#5E6672',
@@ -30,7 +33,7 @@ export default {
       boxShadow: {
         card: '0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 32px -18px rgba(0,0,0,0.8)',
         lift: '0 1px 0 rgba(255,255,255,0.06) inset, 0 18px 40px -16px rgba(0,0,0,0.9)',
-        red: '0 10px 30px -12px rgba(225,6,0,0.55)',
+        red: '0 10px 30px -12px rgb(var(--accent) / 0.55)',
       },
       keyframes: {
         rise: { from: { opacity: '0', transform: 'translateY(10px)' }, to: { opacity: '1', transform: 'none' } },

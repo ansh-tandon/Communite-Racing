@@ -6,7 +6,10 @@ import { ApiError } from './api/client';
 import App from './App';
 import { ToastProvider } from './components/ui';
 import { AuthProvider } from './hooks/useAuth';
+import { applySeason } from './lib/season';
 import './styles/index.css';
+
+applySeason();
 
 const queryClient = new QueryClient({
   defaultOptions: {
