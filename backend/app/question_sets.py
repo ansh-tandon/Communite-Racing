@@ -60,3 +60,17 @@ US_GP_2026: list[dict] = [
     {"prompt": "🥉 How many podium finishers will start outside the top 3?", "type": "number", "weight": 15,
      "config": {"penalty": 5, "min": 0, "max": 3, "tolerance": 0}, "auto": {"rule": "top_from_outside", "n": 3}},
 ]
+
+# R19, Autódromo Hermanos Rodríguez, lights out 1 Nov 2026 20:00 UTC (1:30 am IST, 2 Nov): the US GP questions and
+# marking. Haas reserve Ryo Hirakawa (HIR, #50) drives Ocon's car this weekend, per OpenF1's qualifying entry list.
+MEXICO_GRID = ["HIR" if c == "OCO" else c for c in GRID]
+
+
+def _for_mexico(q: dict) -> dict:
+    q = {**q, "options": [("HIR" if o == "OCO" else o) for o in q.get("options", [])]}
+    if q["prompt"].startswith("🏆"):
+        q["prompt"] = "🏆 Who will win the Mexico City Grand Prix?"
+    return q
+
+
+MEXICO_GP_2026: list[dict] = [_for_mexico(q) for q in US_GP_2026]

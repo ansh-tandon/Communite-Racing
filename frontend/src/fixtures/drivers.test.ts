@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isDriverList } from './drivers';
+import { driver, isDriverList, team } from './drivers';
 
 describe('isDriverList', () => {
   it('shows driver cards for drivers plus an extra choice like "No retirements" or "Nobody"', () => {
@@ -22,5 +22,13 @@ describe('teams', () => {
     expect(team('Not a team')).toBeNull();
     expect(isTeamList(['McLaren', 'Mercedes', 'Red Bull', 'Ferrari', 'Williams', 'Racing Bulls', 'Aston Martin', 'Haas', 'Audi', 'Alpine', 'Cadillac'])).toBe(true);
     expect(isTeamList(['NOR', 'VER'])).toBe(false);
+  });
+});
+
+describe('reserve drivers', () => {
+  it('shows a stand-in by name without adding him to his team', () => {
+    expect(driver('HIR')?.name).toBe('Ryo Hirakawa');
+    expect(isDriverList(['NOR', 'HIR', 'VER', 'No retirements'])).toBe(true);
+    expect(team('Haas')?.drivers).toEqual(['OCO', 'BEA']);
   });
 });

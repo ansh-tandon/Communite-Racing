@@ -13,7 +13,7 @@ from sqlalchemy import update
 from app.core.db import SessionLocal
 from app.main import app
 from app.models import Race
-from app.question_sets import US_GP_2026, US_GP_2026_FP1
+from app.question_sets import MEXICO_GP_2026, US_GP_2026, US_GP_2026_FP1
 from app.services.openf1 import get_client
 from app.services.openf1 import sync as sync_mod
 from app.services.openf1.rules import RULES, NoValue, RaceData, resolve, validate_auto
@@ -57,6 +57,17 @@ def test_us_gp_questions_follow_the_league_marking():
     for q in US_GP_2026:
         assert q["auto"]["rule"] in RULES, q["prompt"]
         assert validate_auto(q["type"], q["auto"]), q["prompt"]
+
+
+async def test_mexico_repeats_the_us_gp_questions_with_hirakawa_for_ocon(make_race):
+    same = lambda qs: [(q["type"], q["weight"], q["config"], q["auto"]) for q in qs]  # noqa: E731
+    assert same(MEXICO_GP_2026) == same(US_GP_2026)
+    assert MEXICO_GP_2026[0]["prompt"] == "🏆 Who will win the Mexico City Grand Prix?"
+    for q in MEXICO_GP_2026:
+        assert "OCO" not in q.get("options", []), q["prompt"]
+    assert "HIR" in MEXICO_GP_2026[1]["options"] and MEXICO_GP_2026[1]["options"][-1] == "No retirements"
+    race = await make_race(questions=MEXICO_GP_2026)
+    assert len(race["questions"]) == 10
 
 
 async def test_us_gp_questions_accepted_by_the_admin_api(make_race):

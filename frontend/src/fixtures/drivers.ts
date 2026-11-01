@@ -24,7 +24,12 @@ const ROWS: [string, string, string, number][] = [
   ['PER', 'Sergio Pérez', 'Cadillac', 11], ['BOT', 'Valtteri Bottas', 'Cadillac', 77],
 ];
 
-const BY_CODE = new Map(ROWS.map(([code, name, team, number]) => [code, { code, name, team, number, color: TEAM_COLOR[team] }]));
+// Reserves who stand in for a race driver: shown by name, but not listed among their team's drivers.
+const RESERVES: [string, string, string, number][] = [
+  ['HIR', 'Ryo Hirakawa', 'Haas', 50], ['HER', 'Colton Herta', 'Cadillac', 25],
+];
+
+const BY_CODE = new Map([...ROWS, ...RESERVES].map(([code, name, team, number]) => [code, { code, name, team, number, color: TEAM_COLOR[team] }]));
 
 export const DRIVER_CODES = ROWS.map((r) => r[0]);
 
