@@ -305,9 +305,11 @@ async def season_standings(s: AsyncSession, season: int) -> list[dict]:
     only = await latest_published_race(s, season) if get_settings().standalone_races else None
     total = func.sum(Score.points)
     wins = func.sum(case((Score.rank == 1, 1), else_=0))
+    # one race: its stored places stand, so a tie the admin has split shows as split
+    place = func.min(Score.rank) if only else func.rank().over(order_by=total.desc())
     q = (
         select(
-            func.rank().over(order_by=total.desc()).label("rank"),
+            place.label("rank"),
             Score.user_id,
             display_name(),
             total.label("points"),
@@ -319,7 +321,7 @@ async def season_standings(s: AsyncSession, season: int) -> list[dict]:
         .join(Race, Race.id == Score.race_id)
         .where(Race.season == season, Race.published_at.is_not(None), *([Race.id == only] if only else []))
         .group_by(Score.user_id, User.id)
-        .order_by(total.desc(), wins.desc(), Score.user_id)
+        .order_by(*([place] if only else [total.desc(), wins.desc()]), Score.user_id)
     )
     return [dict(r._mapping) for r in await s.execute(q)]
 
