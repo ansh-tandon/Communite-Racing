@@ -9,7 +9,7 @@ import { Avatar, Badge, Button, EmptyState, ErrorState, SectionTitle, Skeleton, 
 import { useAuth } from '../hooks/useAuth';
 import { useLiveLeaderboard, useRace, useRaceLeaderboard, useRaces } from '../hooks/queries';
 import { isComplete, maxPoints } from '../utils/answers';
-import { fmtDate, fmtDateTime, fmtTime, ordinal, two } from '../utils/format';
+import { fmtDate, fmtDateTime, ordinal, two } from '../utils/format';
 
 // ---------- Race Weekend: every race of the season ----------
 export function RacesPage() {
@@ -132,7 +132,7 @@ export function LiveBoard({ raceId, initialView = 'quiz' }: { raceId: number; in
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-3">
         <Badge tone={final ? 'grey' : 'green'} dot={!final}><Radio className="h-3.5 w-3.5" aria-hidden />{final ? 'Provisional · awaiting publish' : 'Live · provisional'}</Badge>
-        <span className="text-sm text-muted">{l.results_in} of {l.questions} results in{l.live_results ? ` (${l.live_results} still live)` : ''}{l.updated_at ? ` · updated ${fmtTime(l.updated_at)}` : ''}</span>
+        <span className="text-sm text-muted">{l.results_in} of {l.questions} results in{l.live_results ? ` (${l.live_results} still live)` : ''}</span>
       </div>
       {!l.standalone && <div className="flex gap-1" role="tablist" aria-label="Live standings">
         {([['quiz', 'This race'], ['season', 'Season']] as const).map(([k, label]) => (
