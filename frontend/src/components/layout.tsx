@@ -9,6 +9,7 @@ import { useSoftKeyboard } from '../hooks/useSoftKeyboard';
 import { Avatar, cx } from './ui';
 import Navbar from './ui/navbar-02';
 import { SeasonBackdrop, SeasonBanner } from './seasonal';
+import { season } from '../lib/season';
 
 const NAV = [
   { to: '/', label: 'Home', icon: Home, end: true },
@@ -84,9 +85,9 @@ export function AppShell() {
   useSoftKeyboard();
   return (
     // the page leaves room for the phone tab bar (--tabbar: 0 on laptops and while typing)
-    <div className="relative isolate min-h-dvh pb-[var(--tabbar)]">
+    <div className={cx('relative isolate min-h-dvh pb-[var(--tabbar)]', season === 'diwali' && !pathname.startsWith('/quiz/') && 'diya-space')}>
       {/* no bats or cobwebs while someone is answering the quiz */}
-      {!pathname.startsWith('/quiz/') && <SeasonBackdrop />}
+      {!pathname.startsWith('/quiz/') && <SeasonBackdrop front />}
       {/* one sticky block that starts below the iPhone status bar / notch; a phone held sideways
           is too short to keep it pinned, so there it scrolls away with the page */}
       <div className="sticky top-0 z-40 bg-bg pt-[env(safe-area-inset-top)] [@media(max-height:500px)]:static">

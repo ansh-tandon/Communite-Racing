@@ -7,6 +7,7 @@ import { auth } from '../api/endpoints';
 import type { TokenOut } from '../api/types';
 import { GOOGLE_SIGN_IN, GoogleButton } from '../components/GoogleButton';
 import { SeasonBackdrop, SeasonBanner } from '../components/seasonal';
+import { season } from '../lib/season';
 import { LazyGlobe } from '../components/LazyGlobe';
 import { Input } from '../components/ui/input';
 import { CardButton } from '../components/ui/sign-in-card-2';
@@ -440,7 +441,7 @@ export default function LoginPage() {
     <div className="relative isolate min-h-dvh overflow-x-hidden">
       <Backdrop />
       <SeasonBackdrop />
-      <div className="absolute inset-x-0 top-0 z-10"><SeasonBanner /></div>
+      <div className="absolute inset-x-0 top-0 z-[1]"><SeasonBanner /></div>
       {playLights && (
         <LightsOutSequence show={step === 'out' && !!arriving.current} audio={getAudio}
           onDone={() => { const t = arriving.current; if (t) arrive(t); }} />
@@ -448,7 +449,8 @@ export default function LoginPage() {
 
       {/* logo, headline, form and footer share one left edge; the globe balances the right */}
       <div className="mx-auto flex min-h-dvh max-w-7xl flex-col px-5 sm:px-10 lg:px-16">
-        <header className="flex items-center gap-4 pt-[max(1.5rem,env(safe-area-inset-top))] sm:pt-8">
+        {/* the Diwali scene is taller than the other banners: the logo starts below it */}
+        <header className={`flex items-center gap-4 ${season === 'diwali' ? 'pt-[84px] sm:pt-[120px]' : 'pt-[max(1.5rem,env(safe-area-inset-top))] sm:pt-8'}`}>
           <img src="/cr-logo-white.png" alt="Communitie Racing" width={733} height={224} className="h-9 w-auto sm:h-10" />
           <span className="flex items-center gap-2 text-sm font-semibold text-white/75">
             {/* an F1 car's rear rain light, blinking */}
