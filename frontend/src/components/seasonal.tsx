@@ -97,7 +97,7 @@ export function SpookyNight() {
   );
 }
 
-// ---------- Diwali, kept simple: a string of warm lights, a few soft bursts and a row of small diyas ----------
+// ---------- Diwali: a string of warm lights, one fine-line mandala, a few soft bursts and a row of small diyas ----------
 
 // One 1680 x 28 tile of warm lights on a thin cord, repeated side by side and drifting. The bulbs sit in three
 // separate layers that fade in turn: fading a whole layer is cheap on a phone, fading each bulb is not.
@@ -175,6 +175,22 @@ function Diya({ i }: { i: number }) {
         <path d="M16 8c1.8 2.6 2.2 4.3 1.2 6h-2.4c-1-1.7-.6-3.4 1.2-6z" fill="#FFF7D6" />
       </g>
       <path d="M5 19h22c-.8 6-5.3 9.5-11 9.5S5.8 25 5 19z" fill="#C2410C" />
+      <path d="M5 19h22" stroke="#FFD166" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** One large mandala drawn in fine gold line, turning very slowly behind the page. */
+function Mandala() {
+  const turns = (n: number) => Array.from({ length: n }, (_, i) => (i * 360) / n);
+  return (
+    <svg viewBox="-104 -104 208 208" className="mandala absolute -right-40 top-28 h-[340px] w-[340px] opacity-30 sm:-right-32 sm:top-24 sm:h-[620px] sm:w-[620px] sm:opacity-[.16]" fill="none" stroke="#E8B65A" strokeWidth=".45">
+      <circle r="102" /><circle r="98" /><circle r="56" /><circle r="36" /><circle r="14" />
+      {turns(24).map((a) => <path key={a} transform={`rotate(${a})`} d="M0-98C10-84 10-70 0-58-10-70-10-84 0-98z" />)}
+      {turns(24).map((a) => <circle key={a} transform={`rotate(${a + 7.5})`} cy="-92" r="1.3" fill="#E8B65A" stroke="none" />)}
+      {turns(16).map((a) => <path key={a} transform={`rotate(${a})`} d="M0-55C8-48 8-42 0-37-8-42-8-48 0-55z" />)}
+      {turns(32).map((a) => <circle key={a} transform={`rotate(${a})`} cy="-30" r=".9" fill="#E8B65A" stroke="none" />)}
+      {turns(8).map((a) => <path key={a} transform={`rotate(${a})`} d="M0-25C6-21 6-17 0-14-6-17-6-21 0-25z" />)}
     </svg>
   );
 }
@@ -182,6 +198,7 @@ function Diya({ i }: { i: number }) {
 function DiwaliNight({ front }: { front: boolean }) {
   return (
     <>
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden"><Mandala /></div>
       {/* inside the app the cards fill a phone's screen, so the bursts go over them (taps pass straight through) */}
       <div aria-hidden className={`pointer-events-none fixed inset-0 overflow-hidden ${front ? 'z-[2]' : 'z-0'}`}>
         {SKY.map((f, i) => (

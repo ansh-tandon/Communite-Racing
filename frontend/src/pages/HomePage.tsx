@@ -1,3 +1,4 @@
+import { season } from '../lib/season';
 import { Link } from 'react-router-dom';
 import { Flag } from 'lucide-react';
 import { GrandPrixCard, RaceHero } from '../components/race';
@@ -55,7 +56,7 @@ export default function HomePage() {
 
   return (
     <div className="space-y-8">
-      <p className="text-muted">Welcome back{user?.display_name ? `, ${user.display_name.split(' ')[0]}` : ''}.</p>
+      <p className="text-muted">{season === 'diwali' ? 'Shubh Deepavali' : 'Welcome back'}{user?.display_name ? `, ${user.display_name.split(' ')[0]}` : ''}.</p>
       {hero ? <RaceHero race={hero} season={list} /> :<EmptyState icon={Flag} title="No races yet" body="The season's first quiz appears here as soon as the admin opens it." />}
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">

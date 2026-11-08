@@ -16,4 +16,5 @@ export const season = seasonAt();
 
 export function applySeason(): void {
   if (season) document.documentElement.dataset.season = season;
+  if (season === 'diwali') document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#140A1A');
 }

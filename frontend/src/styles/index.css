@@ -33,6 +33,8 @@
   :root { --tabbar: calc(64px + env(safe-area-inset-bottom)); }
   /* brand accent as RGB channels: Formula 1 red */
   :root { --accent: 225 6 0; --accent-hi: 255 42 31; --accent-lo: 158 4 0; }
+  /* surfaces and greys */
+  :root { --bg: 11 13 16; --surface: 20 24 30; --surface2: 27 33 41; --surface3: 35 42 52; --line: 38 46 57; --muted: 146 153 163; --faint: 94 102 114; }
   @media (min-width: 768px) { :root { --tabbar: 0px; } }
   html[data-keyboard='open'] { --tabbar: 0px; }
 
@@ -158,12 +160,36 @@ html[data-season='muertos'] .sway { transform-box: fill-box; transform-origin: 5
   html[data-season='muertos'] .bat { display: none; }
 }
 
-/* Diwali (8 Nov, see lib/season.ts), kept simple: saffron accents, a string of warm lights, soft bursts, small diyas */
-html[data-season='diwali'] { --accent: 217 72 15; --accent-hi: 245 124 30; --accent-lo: 154 52 18; }
+/* Diwali (8 Nov, see lib/season.ts): the interface itself turns to a warm night, plum and saffron with fine gold */
+html[data-season='diwali'] {
+  --accent: 217 72 15; --accent-hi: 245 124 30; --accent-lo: 154 52 18;
+  --bg: 20 10 26; --surface: 32 17 38; --surface2: 43 24 48; --surface3: 54 31 58; --line: 86 58 56; --muted: 193 174 176; --faint: 136 114 122;
+}
 html[data-season='diwali'] body {
-  background-image: radial-gradient(60rem 30rem at 85% -10%, rgb(245 165 36 / 0.09), transparent 70%);
+  background-image:
+    radial-gradient(70rem 34rem at 80% -12%, rgb(245 165 36 / 0.14), transparent 70%),
+    radial-gradient(56rem 30rem at -10% 105%, rgb(214 31 122 / 0.10), transparent 70%);
   background-attachment: fixed;
 }
+html[data-season='diwali'] .carbon { background-color: rgb(var(--bg)); }
+html[data-season='diwali'] .panel { box-shadow: inset 0 1px 0 rgb(255 197 61 / 0.16), 0 18px 40px -24px rgb(0 0 0 / 0.9); }
+html[data-season='diwali'] .sector { color: #E8B65A; }
+html[data-season='diwali'] p.sector::before { content: '\2726'; margin-right: .55em; font-size: .8em; color: #FFC53D; }
+html[data-season='diwali'] .stripe { background: linear-gradient(90deg, #FFC53D, #E8590C 60%, transparent); }
+html[data-season='diwali'] .bg-accent { background-image: linear-gradient(100deg, #B93A0C, #D9580F); }
+/* page titles in gold, with a small lit flame on a hairline underneath */
+html[data-season='diwali'] main.px-safe h1 {
+  padding-top: .14em; margin-top: -.14em;
+  background-image: linear-gradient(100deg, #FFF3C4, #FFC53D 48%, #FF9F43);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+html[data-season='diwali'] main.px-safe h1::after {
+  content: ''; display: block; width: 120px; height: 14px; margin-top: 12px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 14'%3E%3Cpath d='M0 8h48M72 8h48' stroke='%23E8B65A' stroke-opacity='.55'/%3E%3Cpath d='M60 1c3.5 3.8 4.5 6 2.8 8.8-1.5 1.5-4.1 1.5-5.6 0C55.5 7 56.5 4.8 60 1z' fill='%23FFC53D'/%3E%3Cpath d='M52 11.5h16' stroke='%23C2410C' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat left center / contain;
+}
+html[data-season='diwali'] .mandala { animation: mandala 240s linear infinite; }
+@keyframes mandala { to { transform: rotate(360deg); } }
 /* phones: the diyas stand on the tab bar, so pinned bars and the end of the page sit above them */
 @media (max-width: 767.98px) {
   html:not([data-keyboard='open']) .diya-space { --tabbar: calc(64px + env(safe-area-inset-bottom) + 40px); }
@@ -179,6 +205,6 @@ html[data-season='diwali'] .flame-glow { transform-box: fill-box; transform-orig
 @keyframes flame-glow { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .75; transform: scale(1.1); } }
 @media (prefers-reduced-motion: reduce) {
   html[data-season='diwali'] .picado, html[data-season='diwali'] .twinkle,
-  html[data-season='diwali'] .flame, html[data-season='diwali'] .flame-glow { animation: none; }
+  html[data-season='diwali'] .flame, html[data-season='diwali'] .flame-glow, html[data-season='diwali'] .mandala { animation: none; }
   html[data-season='diwali'] .burst-wrap { display: none; }
 }

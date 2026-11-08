@@ -8,18 +8,18 @@ export default {
       // a phone held sideways: wide but too short to stack things (iPhones are 320–430px tall this way)
       screens: { land: { raw: '(orientation: landscape) and (max-height: 500px)' } },
       colors: {
-        bg: '#0B0D10',
-        surface: '#14181E',
-        surface2: '#1B2129',
-        surface3: '#232A34',
-        line: '#262E39',
-        // accent colours are CSS variables (styles/index.css), so a seasonal theme can swap them
+        bg: 'rgb(var(--bg) / <alpha-value>)',
+        surface: 'rgb(var(--surface) / <alpha-value>)',
+        surface2: 'rgb(var(--surface2) / <alpha-value>)',
+        surface3: 'rgb(var(--surface3) / <alpha-value>)',
+        line: 'rgb(var(--line) / <alpha-value>)',
+        // these are CSS variables (styles/index.css), so a seasonal theme can swap them
         accent: { DEFAULT: 'rgb(var(--accent) / <alpha-value>)', hi: 'rgb(var(--accent-hi) / <alpha-value>)', lo: 'rgb(var(--accent-lo) / <alpha-value>)' },
         marigold: '#F5A524',
         violet: '#8B4FD8',
         ink: '#F5F5F5',
-        muted: '#9299A3',
-        faint: '#5E6672',
+        muted: 'rgb(var(--muted) / <alpha-value>)',
+        faint: 'rgb(var(--faint) / <alpha-value>)',
         ok: '#3DBE7A',
         warn: '#F2A93B',
       },
