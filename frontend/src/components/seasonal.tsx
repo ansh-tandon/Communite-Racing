@@ -208,7 +208,7 @@ function DiwaliNight({ front }: { front: boolean }) {
         ))}
       </div>
       {/* on a phone the diyas stand on top of the tab bar, which would otherwise hide them */}
-      <div aria-hidden className={`pointer-events-none fixed inset-x-0 flex justify-center gap-8 pb-1.5 sm:gap-14 ${front ? 'bottom-[calc(64px+env(safe-area-inset-bottom))] z-30 bg-bg md:bottom-0 md:z-0 md:bg-transparent [html[data-keyboard=open]_&]:hidden' : 'bottom-0 z-0'}`}>
+      <div aria-hidden className={`pointer-events-none fixed inset-x-0 flex justify-center gap-8 pb-1.5 sm:gap-14 ${front ? 'bottom-[calc(64px+env(safe-area-inset-bottom))] z-30 bg-bg md:bottom-0 md:z-0 md:bg-transparent [html[data-keyboard=open]_&]:hidden' : 'bottom-0 z-0 hidden md:flex'}`}>
         {Array.from({ length: 7 }, (_, i) => <span key={i} className={i > 4 ? 'hidden md:block' : ''}><Diya i={i} /></span>)}
       </div>
     </>

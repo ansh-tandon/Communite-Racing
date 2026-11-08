@@ -12,7 +12,9 @@ import { Input } from '../components/ui/input';
 import { CardButton } from '../components/ui/sign-in-card-2';
 import { CALENDAR, isPast, nextRace, nextUpLabel } from '../fixtures/circuits';
 import { cx } from '../components/ui';
-import { fmtDateTime } from '../utils/format';
+import { fmtDate, fmtDateTime, two } from '../utils/format';
+import { season } from '../lib/season';
+import { splitMs, useCountdown } from '../hooks/useCountdown';
 import { useAuth } from '../hooks/useAuth';
 
 const RESEND_SECONDS = 30;
@@ -115,7 +117,7 @@ function RevealHeadline() {
         // so the condensed caps aren't clipped by the tight line height
         <span key={line} className="-my-[0.06em] block overflow-hidden py-[0.06em]">
           <span
-            className={cx('block whitespace-nowrap', animate && (go ? 'animate-linein motion-reduce:animate-none' : 'translate-y-full opacity-0 motion-reduce:transform-none motion-reduce:opacity-100'))}
+            className={cx('block whitespace-nowrap', i === 1 && 'headline-gold w-fit', animate && (go ? 'animate-linein motion-reduce:animate-none' : 'translate-y-full opacity-0 motion-reduce:transform-none motion-reduce:opacity-100'))}
             style={animate && go ? { animationDelay: `${i * 200}ms` } : undefined}
             onAnimationEnd={i === HEADLINE.length - 1 ? () => { headlineShown = true; } : undefined}
           >
@@ -128,11 +130,27 @@ function RevealHeadline() {
 }
 
 /** The calendar on the globe: it spins in, pins the next race and keeps swaying gently around it. */
+/** The line under the globe: a live countdown on the last day. It ticks by itself, so the globe never re-renders. */
+function RaceLine({ race }: { race: NonNullable<ReturnType<typeof nextRace>> }) {
+  const ms = useCountdown(race.start);
+  if (ms && ms < 86_400_000) {
+    const { hours, minutes, seconds } = splitMs(ms);
+    return <>Predictions lock in <span className="num font-semibold text-white">{hours}h {two(minutes)}m {two(seconds)}s</span>. Every race has its own prediction quiz.</>;
+  }
+  const day = race.start ? fmtDateTime(race.start) : new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(`${race.raceDay}T12:00:00`));
+  return <>{race.start ? 'Lights out' : 'Race day'} <span className="font-semibold text-white">{day}</span>. Every race has its own prediction quiz.</>;
+}
+
+function DiwaliGreeting() {
+  const next = nextRace();
+  const tonight = next?.start && fmtDate(next.start) === fmtDate(new Date().toISOString()) ? next.gp.replace('Grand Prix', 'GP') : null;
+  return <p className="sector mb-3">Shubh Deepavali{tonight && ` · ${tonight} tonight`}</p>;
+}
+
 function NextRaceGlobe() {
   const [now] = useState(() => new Date());
   const next = nextRace(now);
   const markers = CALENDAR.map((r) => ({ lat: r.lat, lng: r.lng, done: isPast(r, now) }));
-  const day = next && (next.start ? fmtDateTime(next.start) : new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(`${next.raceDay}T12:00:00`)));
   return (
     <>
       <LazyGlobe target={next && { lat: next.lat, lng: next.lng, label: nextUpLabel(next) }} markers={markers} route flyIn sway
@@ -141,7 +159,7 @@ function NextRaceGlobe() {
         className="aspect-square w-full max-w-[min(100%,24rem,55svh)] land:max-w-[min(100%,68svh)] lg:max-w-[min(100%,62svh)]" />
       <p className="mt-4 max-w-sm text-center text-sm text-white/60 land:mt-2 lg:mt-6">
         {next
-          ? <>{next.start ? 'Lights out' : 'Race day'} <span className="font-semibold text-white">{day}</span>. Every race has its own prediction quiz.</>
+          ? <RaceLine race={next} />
           : 'Every Grand Prix on the calendar, one prediction quiz each.'}
       </p>
     </>
@@ -467,6 +485,7 @@ export default function LoginPage() {
               {step === 'email' && (
                 <motion.form key="email" {...swap} onSubmit={send} className="space-y-8" noValidate>
                   <div>
+                    {season === 'diwali' && <DiwaliGreeting />}
                     <RevealHeadline />
                     <p className="mt-5 max-w-[26rem] text-base leading-relaxed text-white/80">Answer a few questions before every Grand Prix. Score after the podium. Climb the Communitie Racing championship.</p>
                   </div>
