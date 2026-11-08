@@ -5,7 +5,7 @@ import { splitMs, useCountdown } from '../hooks/useCountdown';
 import { fmtDateTime, fmtDay, fmtTime, ordinal, PHASE_LABEL, relative, two } from '../utils/format';
 import { trackOutline } from '../fixtures/tracks';
 import { LazyCircuit, LazyGlobe, racePin, seasonMarkers } from './LazyGlobe';
-import { MuertosNote } from './seasonal';
+import { SeasonNote } from './seasonal';
 import { Badge, Button, cx } from './ui';
 
 export function RaceStatusBadge({ phase }: { phase: Phase }) {
@@ -81,7 +81,7 @@ export function RaceHero({ race, season = [] }: { race: RaceSummary; season?: Ra
           {gp ? race.name.replace(/\s+grand prix$/i, '') : race.name}
         </h1>
         <p className="mt-3 text-lg">{gp && 'Grand Prix · '}{race.circuit}</p>
-        <MuertosNote country={race.country} />
+        <SeasonNote country={race.country} />
         <div className="mt-7">
           {race.phase === 'open' && (<>
             <p className="mb-2 text-[15px] text-muted">Predictions lock in</p>

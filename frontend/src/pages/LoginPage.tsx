@@ -6,7 +6,7 @@ import { ApiError, DEMO, tokenStore } from '../api/client';
 import { auth } from '../api/endpoints';
 import type { TokenOut } from '../api/types';
 import { GOOGLE_SIGN_IN, GoogleButton } from '../components/GoogleButton';
-import { PapelPicado, SpookyNight } from '../components/seasonal';
+import { SeasonBackdrop, SeasonBanner } from '../components/seasonal';
 import { LazyGlobe } from '../components/LazyGlobe';
 import { Input } from '../components/ui/input';
 import { CardButton } from '../components/ui/sign-in-card-2';
@@ -439,8 +439,8 @@ export default function LoginPage() {
   return (
     <div className="relative isolate min-h-dvh overflow-x-hidden">
       <Backdrop />
-      <SpookyNight />
-      <div className="absolute inset-x-0 top-0 z-10"><PapelPicado /></div>
+      <SeasonBackdrop />
+      <div className="absolute inset-x-0 top-0 z-10"><SeasonBanner /></div>
       {playLights && (
         <LightsOutSequence show={step === 'out' && !!arriving.current} audio={getAudio}
           onDone={() => { const t = arriving.current; if (t) arrive(t); }} />
