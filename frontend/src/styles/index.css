@@ -158,42 +158,27 @@ html[data-season='muertos'] .sway { transform-box: fill-box; transform-origin: 5
   html[data-season='muertos'] .bat { display: none; }
 }
 
-/* Diwali (8 Nov, see lib/season.ts): saffron accents, a marigold toran, rangoli, fireworks, anars, chakris and diyas */
+/* Diwali (8 Nov, see lib/season.ts), kept simple: saffron accents, a string of warm lights, soft bursts, small diyas */
 html[data-season='diwali'] { --accent: 217 72 15; --accent-hi: 245 124 30; --accent-lo: 154 52 18; }
 html[data-season='diwali'] body {
-  background-image:
-    radial-gradient(60rem 30rem at 85% -10%, rgb(255 61 129 / 0.26), transparent 70%),
-    radial-gradient(50rem 26rem at -10% 20%, rgb(245 165 36 / 0.22), transparent 70%),
-    radial-gradient(60rem 26rem at 50% 110%, rgb(217 72 15 / 0.30), transparent 70%);
+  background-image: radial-gradient(60rem 30rem at 85% -10%, rgb(245 165 36 / 0.09), transparent 70%);
   background-attachment: fixed;
 }
-/* phones: the row of diyas stands on the tab bar, so pinned bars and the end of the page sit above it */
+/* phones: the diyas stand on the tab bar, so pinned bars and the end of the page sit above them */
 @media (max-width: 767.98px) {
-  html:not([data-keyboard='open']) .diya-space { --tabbar: calc(64px + env(safe-area-inset-bottom) + 58px); }
+  html:not([data-keyboard='open']) .diya-space { --tabbar: calc(64px + env(safe-area-inset-bottom) + 40px); }
 }
-html[data-season='diwali'] .diya-row { background: linear-gradient(to top, rgb(84 26 0 / 0.95), rgb(84 26 0 / 0.55) 60%, transparent); }
-html[data-season='diwali'] .diwali-scene { background: linear-gradient(#150A30, #3B1550 58%, #B4470F); box-shadow: 0 6px 24px -8px rgb(255 140 40 / 0.5); }
 html[data-season='diwali'] .picado { animation: picado 140s linear infinite; }
-html[data-season='diwali'] .twinkle { will-change: opacity; animation: twinkle 1.65s ease-in-out infinite; }
-@keyframes twinkle { 0%, 100% { opacity: 1; } 50% { opacity: .22; } }
-html[data-season='diwali'] main.px-safe h1 { text-shadow: 0 0 18px rgb(245 165 36 / 0.45), 0 0 48px rgb(255 61 129 / 0.3); animation: candle 5s ease-in-out infinite; }
-html[data-season='diwali'] .rangoli { animation: rangoli 90s linear infinite; }
-html[data-season='diwali'] .burst-wrap { opacity: 0; will-change: transform, opacity; animation: burst 11s ease-out infinite; }
-html[data-season='diwali'] .rocket { opacity: 0; will-change: transform, opacity; animation: rocket 11s linear infinite; }
-html[data-season='diwali'] .ember { opacity: 0; animation: ember linear infinite; }
-html[data-season='diwali'] .spark { animation: spark 1s ease-out infinite; }
-html[data-season='diwali'] .chakri { transform-box: fill-box; transform-origin: 50% 50%; animation: rangoli .55s linear infinite; }
-html[data-season='diwali'] .flame { transform-box: fill-box; transform-origin: 50% 100%; animation: flame 1.1s ease-in-out infinite; }
-html[data-season='diwali'] .flame-glow { transform-box: fill-box; transform-origin: 50% 50%; animation: flame-glow 1.1s ease-in-out infinite; }
-@keyframes rangoli { to { transform: rotate(360deg); } }
-@keyframes rocket { 0% { opacity: 0; transform: translateY(75vh); } 2% { opacity: 1; } 11% { opacity: 1; transform: translateY(0); } 12%, 100% { opacity: 0; transform: translateY(0); } }
-@keyframes burst { 0%, 11% { opacity: 0; transform: scale(.1); } 14% { opacity: .95; transform: scale(.75); } 24% { opacity: .8; transform: scale(1); } 36%, 100% { opacity: 0; transform: scale(1.12) translateY(14px); } }
-@keyframes spark { 0% { opacity: 1; transform: translate(0, 0) scale(1); } 100% { opacity: 0; transform: translate(var(--x), var(--h)) scale(.3); } }
-@keyframes ember { 0% { opacity: 0; transform: translate(0, 0); } 12% { opacity: .9; } 80% { opacity: .35; } 100% { opacity: 0; transform: translate(26px, -62vh); } }
-@keyframes flame { 0%, 100% { transform: scale(1, 1) rotate(-2deg); } 50% { transform: scale(.9, 1.12) rotate(3deg); } }
-@keyframes flame-glow { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .7; transform: scale(1.14); } }
+html[data-season='diwali'] .twinkle { will-change: opacity; animation: twinkle 2.7s ease-in-out infinite; }
+html[data-season='diwali'] .burst-wrap { opacity: 0; will-change: transform, opacity; animation: burst 12s ease-out infinite; }
+html[data-season='diwali'] .flame { transform-box: fill-box; transform-origin: 50% 100%; animation: flame 1.4s ease-in-out infinite; }
+html[data-season='diwali'] .flame-glow { transform-box: fill-box; transform-origin: 50% 50%; animation: flame-glow 1.4s ease-in-out infinite; }
+@keyframes twinkle { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+@keyframes burst { 0% { opacity: 0; transform: scale(.3); } 3% { opacity: .75; transform: scale(.8); } 12% { opacity: .55; transform: scale(1); } 22%, 100% { opacity: 0; transform: scale(1.06); } }
+@keyframes flame { 0%, 100% { transform: scale(1, 1) rotate(-2deg); } 50% { transform: scale(.92, 1.08) rotate(2deg); } }
+@keyframes flame-glow { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .75; transform: scale(1.1); } }
 @media (prefers-reduced-motion: reduce) {
-  html[data-season='diwali'] .picado, html[data-season='diwali'] .twinkle, html[data-season='diwali'] main.px-safe h1,
-  html[data-season='diwali'] .rangoli, html[data-season='diwali'] .flame, html[data-season='diwali'] .flame-glow, html[data-season='diwali'] .chakri { animation: none; }
-  html[data-season='diwali'] .burst-wrap, html[data-season='diwali'] .rocket, html[data-season='diwali'] .ember, html[data-season='diwali'] .spark { display: none; }
+  html[data-season='diwali'] .picado, html[data-season='diwali'] .twinkle,
+  html[data-season='diwali'] .flame, html[data-season='diwali'] .flame-glow { animation: none; }
+  html[data-season='diwali'] .burst-wrap { display: none; }
 }
