@@ -26,7 +26,7 @@ const ROWS: [string, string, string, number][] = [
 
 // Reserves who stand in for a race driver: shown by name, but not listed among their team's drivers.
 const RESERVES: [string, string, string, number][] = [
-  ['HIR', 'Ryo Hirakawa', 'Haas', 50], ['HER', 'Colton Herta', 'Cadillac', 25],
+  ['HIR', 'Ryo Hirakawa', 'Haas', 50], ['HER', 'Colton Herta', 'Cadillac', 25], ['CAM', 'Rafael Câmara', 'Haas', 51],
 ];
 
 const BY_CODE = new Map([...ROWS, ...RESERVES].map(([code, name, team, number]) => [code, { code, name, team, number, color: TEAM_COLOR[team] }]));

@@ -28,6 +28,7 @@ describe('teams', () => {
 describe('reserve drivers', () => {
   it('shows a stand-in by name without adding him to his team', () => {
     expect(driver('HIR')?.name).toBe('Ryo Hirakawa');
+    expect(driver('CAM')).toMatchObject({ team: 'Haas', number: 51 });
     expect(isDriverList(['NOR', 'HIR', 'VER', 'No retirements'])).toBe(true);
     expect(team('Haas')?.drivers).toEqual(['OCO', 'BEA']);
   });
