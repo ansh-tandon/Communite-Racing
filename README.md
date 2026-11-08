@@ -28,7 +28,7 @@ Works on **iPhone (Safari)**, **Android (Chrome)** and **desktop**, and installs
 ## Contents
 
 - [What players do](#what-players-do)
-- [Screenshots](#screenshots): [Android](#android) · [iPhone](#iphone-ios) · [Desktop](#desktop) · [Halloween Theme](#halloween-theme)
+- [Screenshots](#screenshots): [Android](#android) · [iPhone](#iphone-ios) · [Desktop](#desktop) · [Halloween Theme](#halloween-theme) · [Diwali Theme](#diwali-theme)
 - [Runs everywhere](#runs-everywhere)
 - [Project structure](#project-structure)
 - [Quick start (demo, no backend)](#quick-start-demo-no-backend)
@@ -58,7 +58,7 @@ Highlights:
 - A timing-tower leaderboard with search, "Find me" and your own row pinned in view
 - Every date and time shown in Indian Standard Time
 - Respects "Reduce motion" on every platform
-- Seasonal themes that switch on and off by date, like the [Halloween Theme](#halloween-theme)
+- Seasonal themes that switch on and off by date, like the [Halloween Theme](#halloween-theme) and the [Diwali Theme](#diwali-theme)
 
 ## Screenshots
 
@@ -142,6 +142,48 @@ How it works: [`frontend/src/lib/season.ts`](frontend/src/lib/season.ts) picks t
 [`frontend/src/styles/index.css`](frontend/src/styles/index.css), and the decorations are in
 [`frontend/src/components/seasonal.tsx`](frontend/src/components/seasonal.tsx). To change the dates or add another
 theme, edit `seasonAt()`.
+
+### Diwali Theme
+
+For the São Paulo Grand Prix, which falls on Diwali, the whole site turns to a warm night from **8 November until
+6 am on 9 November** (India time), so it stays lit through the race, and goes back to Formula 1 red by itself.
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/diwali/phone-login.jpg" width="200" alt="Diwali Theme, phone: sign in with a gold headline and a gold route on the globe" /><br /><sub>Sign in</sub></td>
+    <td align="center"><img src="docs/screenshots/diwali/phone-home.jpg" width="200" alt="Diwali Theme, phone: Home with the São Paulo GP" /><br /><sub>Home</sub></td>
+    <td align="center"><img src="docs/screenshots/diwali/phone-quiz.jpg" width="200" alt="Diwali Theme, phone: the quiz" /><br /><sub>Quiz</sub></td>
+    <td align="center"><img src="docs/screenshots/diwali/phone-leaderboard.jpg" width="200" alt="Diwali Theme, phone: leaderboard with diyas above the tab bar" /><br /><sub>Leaderboard</sub></td>
+  </tr>
+</table>
+
+| Sign in | Home |
+|---|---|
+| <img src="docs/screenshots/diwali/desktop-login.jpg" alt="Diwali Theme, desktop: sign in" /> | <img src="docs/screenshots/diwali/desktop-home.jpg" alt="Diwali Theme, desktop: Home with a gold race title" /> |
+| **Quiz** | **Leaderboard** |
+| <img src="docs/screenshots/diwali/desktop-quiz.jpg" alt="Diwali Theme, desktop: the quiz" /> | <img src="docs/screenshots/diwali/desktop-leaderboard.jpg" alt="Diwali Theme, desktop: leaderboard with a fine-line mandala" /> |
+
+<sub>Demo mode, so the names and scores are sample data (the demo leaderboard adds races up; the live site shows one race at a time).</sub>
+
+What changes:
+
+| | |
+|---|---|
+| **Colours** | Every surface turns plum, with fine gold lines on cards and tables and saffron buttons |
+| **Titles** | Page titles are gold with a small lit flame on a hairline underneath; small labels are gold with a ✦ |
+| **String lights** | A thin string of warm lights under the top bar on every page, twinkling and drifting slowly |
+| **Mandala** | One large mandala in fine gold line, turning very slowly behind the page |
+| **Diyas** | A row of small flickering diyas along the bottom. On phones they stand above the tab bar |
+| **Fireworks** | One small, soft burst at a time |
+| **Sign in** | "Shubh Deepavali" with tonight's race, a gold second line in the headline, and a gold route to a glowing pin on the globe |
+| **Greeting** | Home says "Shubh Deepavali", and the São Paulo GP carries "🪔 Happy Diwali · Race night" |
+
+The diyas, mandala and fireworks are left out of the quiz screen so they never distract from answering. With
+"Reduce motion" on, the decorations stay still and the fireworks are hidden. Only colours and decorations change: the
+layout, the quiz and scoring are the same.
+
+How it works: the same as the Halloween Theme, with `<html data-season="diwali">`. The surfaces and greys are CSS
+variables as well as the accent colours, so a theme can recolour the whole site.
 
 ## Runs everywhere
 
