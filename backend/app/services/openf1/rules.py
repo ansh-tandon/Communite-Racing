@@ -510,6 +510,15 @@ async def _finishing_position(d: RaceData, p: dict) -> int:
     return order.index(n) + 1
 
 
+@rule("driver_position_after_lap", "A driver's position after lap N", "number", params={"driver": DRIVER, "lap": LAP})
+async def _driver_position_after_lap(d: RaceData, p: dict) -> int:
+    n = await d.driver_number(p["driver"])
+    order = await d.order_after_lap(p["lap"])
+    if n not in order:
+        raise NoValue(f"{p['driver']} has no position after lap {p['lap']}.")
+    return order.index(n) + 1
+
+
 @rule("total_laps", "Laps completed by all cars together (practice)", "number", final_only=True)
 async def _total_laps(d: RaceData, p: dict) -> int:
     d.need_final()

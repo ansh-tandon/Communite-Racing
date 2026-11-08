@@ -112,6 +112,14 @@ async def test_final_results_from_the_classification():
     assert await answer(d, "yes_no", {"rule": "everyone_finishes"}) is False
 
 
+async def test_a_drivers_position_after_a_lap():
+    d = await race_data(FakeOpenF1())
+    order = await d.order_after_lap(10)
+    for place in (1, 3, len(order)):
+        driver = str(order[place - 1])  # a driver can be named by car number
+        assert await answer(d, "number", {"rule": "driver_position_after_lap", "driver": driver, "lap": 10}) == place
+
+
 async def test_race_events_from_race_control_pit_and_weather():
     d = await race_data(FakeOpenF1())
     assert await answer(d, "number", {"rule": "safety_cars"}) == 0

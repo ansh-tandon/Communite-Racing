@@ -117,4 +117,4 @@ def test_token_round_trip():
 
 
 async def test_health(client):
-    assert (await client.get("/health")).json() == {"ok": True}
+    assert (await client.get("/health")).json()["ok"] is True

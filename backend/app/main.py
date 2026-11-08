@@ -12,6 +12,7 @@ from app.core.config import get_settings
 from app.core.db import engine
 from app.services.openf1 import close_client
 from app.services.openf1.client import OpenF1Error, OpenF1Unavailable
+from app.services.openf1.rules import RULES
 from app.services.openf1.sync import run_openf1_sync
 from app.services.races import ActionError
 from app.services.scheduler import run_scheduler
@@ -66,7 +67,8 @@ def create_app() -> FastAPI:
     @app.get("/health", tags=["ops"])
     async def health() -> dict:
         # No DB query: uptime pings shouldn't keep the database busy.
-        return {"ok": True}
+        # the rule count shows which build is running, without needing a login
+        return {"ok": True, "openf1_rules": len(RULES)}
 
     return app
 
