@@ -249,7 +249,8 @@ html[data-season='vegas'] .headline-gold {
   color: #FFC2E0;
   text-shadow: 0 0 1px #fff, 0 0 5px rgb(255 46 136 / 0.95);
 }
-html[data-season='vegas'] .neon-diamond { filter: drop-shadow(0 0 6px rgb(255 46 136 / 0.7)); animation: neon-breathe 7s ease-in-out infinite; }
+html[data-season='vegas'] .trails { filter: drop-shadow(0 0 4px rgb(255 46 136 / 0.6)); }
+html[data-season='vegas'] .trail-pulse { stroke-dashoffset: 1090; animation: trail 8s linear infinite; }
 html[data-season='vegas'] .chase { will-change: opacity; animation: chase 1.8s linear infinite; }
 html[data-season='vegas'] .vegas-stamp {
   box-shadow: 0 0 14px rgb(255 46 136 / 0.45), inset 0 0 10px rgb(255 46 136 / 0.25);
@@ -257,10 +258,11 @@ html[data-season='vegas'] .vegas-stamp {
   animation: stamp-in .55s cubic-bezier(.2, 1.4, .4, 1) both;
 }
 @keyframes neon-on { 0% { opacity: .15; } 8% { opacity: 1; } 12% { opacity: .3; } 17% { opacity: 1; } 28% { opacity: .55; } 33%, 100% { opacity: 1; } }
-@keyframes neon-breathe { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+@keyframes trail { from { stroke-dashoffset: 1090; } to { stroke-dashoffset: 0; } }
 @keyframes chase { 0%, 30% { opacity: 1; } 36%, 100% { opacity: .18; } }
 @keyframes stamp-in { from { opacity: 0; transform: rotate(-5deg) scale(1.6); } to { opacity: 1; transform: rotate(-5deg) scale(1); } }
 @media (prefers-reduced-motion: reduce) {
-  html[data-season='vegas'] main.px-safe h1, html[data-season='vegas'] .neon-diamond, html[data-season='vegas'] .chase { animation: none; }
+  html[data-season='vegas'] main.px-safe h1, html[data-season='vegas'] .chase { animation: none; }
+  html[data-season='vegas'] .trail-pulse { display: none; }
   html[data-season='vegas'] .vegas-stamp { animation: none; transform: rotate(-5deg); }
 }

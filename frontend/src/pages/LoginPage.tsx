@@ -486,7 +486,7 @@ export default function LoginPage() {
                 <motion.form key="email" {...swap} onSubmit={send} className="space-y-8" noValidate>
                   <div>
                     {season === 'diwali' && <DiwaliGreeting />}
-                    {season === 'vegas' && <p className="sector mb-3">Las Vegas · Race night</p>}
+                    {season === 'vegas' && <p className="sector mb-3">Every lap is a gamble.</p>}
                     <RevealHeadline />
                     <p className="mt-5 max-w-[26rem] text-base leading-relaxed text-white/80">Answer a few questions before every Grand Prix. Score after the podium. Climb the Communitie Racing championship.</p>
                   </div>

@@ -281,14 +281,32 @@ function SunsetStrip({ slim }: { slim?: boolean }) {
   );
 }
 
-/** One large diamond in neon tube, pink outside and cyan inside, glowing slowly behind the page. */
+// Light trails: long-exposure streaks of cars on the Strip at night, low along the bottom of the page. Each one is a
+// faint line that brightens to the right, with a pulse of light running along it.
+const TRAILS: { d: string; color: string; width: number; speed: number; delay: number }[] = [
+  { d: 'M-40 150C380 142 760 84 1480 46', color: '#FF2E88', width: 2, speed: 7, delay: 0 },
+  { d: 'M-40 158C440 152 880 108 1480 82', color: '#00E5FF', width: 1.4, speed: 9, delay: -3 },
+  { d: 'M-40 142C320 130 660 58 1480 14', color: '#FF7AC0', width: 1, speed: 11, delay: -6 },
+  { d: 'M-40 160C520 158 980 132 1480 116', color: '#FF2E88', width: 1, speed: 8, delay: -2 },
+];
+
 function VegasNight() {
+  const id = useId();
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-      <svg viewBox="-70 -104 140 208" className="neon-diamond absolute -right-28 top-32 h-[380px] opacity-40 sm:-right-20 sm:top-24 sm:h-[640px] sm:opacity-[.22]" fill="none" strokeLinejoin="round">
-        <path d="M0-100L64 0 0 100-64 0z" stroke="#FF2E88" strokeWidth="1.6" />
-        <path d="M0-84L53 0 0 84-53 0z" stroke="#00E5FF" strokeWidth="1" />
-        <path d="M0-100V-84M64 0H53M0 100V84M-64 0H-53" stroke="#FF2E88" strokeOpacity=".6" strokeWidth=".8" />
+    <div aria-hidden className="pointer-events-none fixed inset-x-0 z-0 overflow-hidden" style={{ bottom: 'var(--tabbar)' }}>
+      <svg viewBox="0 0 1440 160" preserveAspectRatio="none" className="trails block h-[72px] w-full opacity-60 sm:h-[170px] sm:opacity-100" fill="none" strokeLinecap="round">
+        <defs>
+          {TRAILS.map((t, i) => (
+            <linearGradient key={i} id={`${id}${i}`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1440" y2="0">
+              <stop offset="0" stopColor={t.color} stopOpacity="0" /><stop offset=".45" stopColor={t.color} stopOpacity=".35" /><stop offset="1" stopColor={t.color} stopOpacity=".8" />
+            </linearGradient>
+          ))}
+        </defs>
+        {TRAILS.map((t, i) => <path key={i} d={t.d} stroke={`url(#${id}${i})`} strokeWidth={t.width} vectorEffect="non-scaling-stroke" />)}
+        {TRAILS.map((t, i) => (
+          <path key={`p${i}`} d={t.d} pathLength={1000} stroke={t.color} strokeWidth={t.width + 1} vectorEffect="non-scaling-stroke"
+            className="trail-pulse" strokeDasharray="90 1000" style={{ animationDuration: `${t.speed}s`, animationDelay: `${t.delay}s` }} />
+        ))}
       </svg>
     </div>
   );
