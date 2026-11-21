@@ -1,7 +1,15 @@
 import { useEffect, useId, useRef } from 'react';
+import { season } from '../lib/season';
 
-// Las Vegas GP (sign-in page): a giant LED sphere with a face that watches the race cars go by underneath, and
-// between cars follows the player's cursor or finger. Our own face and car; no real artwork, logos or teams.
+// Las Vegas GP: a giant LED sphere with a face that watches the race cars go by underneath (sign-in page), and
+// between cars follows the player's cursor or finger. Inside the site it has no car and just follows the cursor.
+// Our own face and car; no real artwork, logos or teams.
+
+/** Inside the site the sphere stands in for the Las Vegas race's globe until the race is over (11:30 am IST). */
+const INSIDE_UNTIL = Date.parse('2026-11-22T06:00:00Z');
+export function sphereFor(raceName: string): boolean {
+  return season === 'vegas' && /las vegas/i.test(raceName) && Date.now() < INSIDE_UNTIL;
+}
 
 const SPHERE = { cx: 100, cy: 92, r: 80 };
 const EYES = [{ x: 70, y: 108 }, { x: 130, y: 108 }];
@@ -30,7 +38,7 @@ function Car({ trail }: { trail: string }) {
   );
 }
 
-export function StaringSphere({ className = '' }: { className?: string }) {
+export function StaringSphere({ className = '', car: withCar = true }: { className?: string; car?: boolean }) {
   const id = useId().replace(/:/g, '');
   const svgRef = useRef<SVGSVGElement>(null);
   const pupils = useRef<(SVGCircleElement | null)[]>([]);
@@ -56,7 +64,7 @@ export function StaringSphere({ className = '' }: { className?: string }) {
 
     const tick = (now: number) => {
       const t = (now - start) % LAP_MS;
-      const passing = t < PASS_MS;
+      const passing = withCar && t < PASS_MS;
       const carX = passing ? -30 + (t / PASS_MS) * 270 : -80;
       car.current?.setAttribute('transform', `translate(${carX.toFixed(1)} ${ROAD_Y})`);
 
@@ -64,7 +72,7 @@ export function StaringSphere({ className = '' }: { className?: string }) {
       let tx: number, ty: number;
       if (passing) [tx, ty] = [carX, ROAD_Y];
       else if (now - pointer.at < LOOK_MS) [tx, ty] = [pointer.x, pointer.y];
-      else if (t > LAP_MS - 800) [tx, ty] = [-20, ROAD_Y];
+      else if (withCar && t > LAP_MS - 800) [tx, ty] = [-20, ROAD_Y];
       else [tx, ty] = [100 + Math.sin(now / 1700) * 35, 160];
 
       EYES.forEach((e, i) => {
@@ -82,11 +90,11 @@ export function StaringSphere({ className = '' }: { className?: string }) {
       window.removeEventListener('pointermove', onPoint);
       window.removeEventListener('pointerdown', onPoint);
     };
-  }, [still]);
+  }, [still, withCar]);
 
   const { cx, cy, r } = SPHERE;
   return (
-    <svg ref={svgRef} viewBox="0 0 200 200" role="img" aria-label="A giant sphere with a face, watching the race cars go by" className={`stare ${className}`}>
+    <svg ref={svgRef} viewBox={withCar ? '0 0 200 200' : '10 2 180 180'} role="img" aria-label="A giant sphere with a face, watching the race cars go by" className={`stare ${className}`}>
       <defs>
         <radialGradient id={`${id}face`} cx="40%" cy="38%" r="70%">
           <stop offset="0" stopColor="#FFF07A" /><stop offset=".55" stopColor="#FFD21F" /><stop offset=".9" stopColor="#E3A300" /><stop offset="1" stopColor="#B97C00" />
@@ -100,9 +108,11 @@ export function StaringSphere({ className = '' }: { className?: string }) {
       </defs>
 
       {/* the road, and the car on it (off to the left until it comes past) */}
-      <path d={`M0 ${ROAD_Y + 5}H200`} stroke="#3B3363" strokeWidth="1" />
-      <path d={`M0 ${ROAD_Y + 10}H200`} stroke="#22D3EE" strokeOpacity=".35" strokeWidth=".6" strokeDasharray="6 5" />
-      <g ref={car} transform={`translate(-80 ${ROAD_Y})`}><Car trail={`${id}trail`} /></g>
+      {withCar && <>
+        <path d={`M0 ${ROAD_Y + 5}H200`} stroke="#3B3363" strokeWidth="1" />
+        <path d={`M0 ${ROAD_Y + 10}H200`} stroke="#22D3EE" strokeOpacity=".35" strokeWidth=".6" strokeDasharray="6 5" />
+        <g ref={car} transform={`translate(-80 ${ROAD_Y})`}><Car trail={`${id}trail`} /></g>
+      </>}
 
       <g clipPath={`url(#${id}ball)`}>
         <circle cx={cx} cy={cy} r={r} fill={`url(#${id}face)`} />

@@ -6,6 +6,7 @@ import { fmtDateTime, fmtDay, fmtTime, ordinal, PHASE_LABEL, relative, two } fro
 import { trackOutline } from '../fixtures/tracks';
 import { LazyCircuit, LazyGlobe, racePin, seasonMarkers } from './LazyGlobe';
 import { SeasonNote } from './seasonal';
+import { StaringSphere, sphereFor } from './vegas-sphere';
 import { Badge, Button, cx } from './ui';
 
 export function RaceStatusBadge({ phase }: { phase: Phase }) {
@@ -70,6 +71,8 @@ export function RaceHero({ race, season = [] }: { race: RaceSummary; season?: Ra
       {outline
         ? <LazyCircuit outline={outline} label={`${race.circuit} in 3D, with the start line and Turn 1 marked; a red light runs the lap.`}
             className="aspect-[4/3] w-full sm:aspect-[16/10] lg:order-last" />
+        : sphereFor(race.name)
+        ? <StaringSphere car={false} className="mx-auto aspect-square w-full max-w-[min(100%,40svh)] lg:order-last lg:max-w-[560px]" />
         : <LazyGlobe target={pin} markers={seasonMarkers(season)} route flyIn
             className="mx-auto aspect-square w-full max-w-[min(100%,40svh)] lg:order-last lg:max-w-[640px]" />}
       <div className="min-w-0 animate-rise">

@@ -6,6 +6,7 @@ import { Countdown, RaceStatusBadge } from '../components/race';
 import { describe, formatValue, penaltyLabel, QuestionRenderer, TYPE_LABEL } from '../components/quiz';
 import { PredictionPass } from '../components/pass';
 import { VegasStamp } from '../components/seasonal';
+import { StaringSphere, sphereFor } from '../components/vegas-sphere';
 import { Button, EmptyState, ErrorState, Skeleton, cx } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { useAutosave, type SaveState } from '../hooks/useAutosave';
@@ -27,8 +28,10 @@ function RaceIntro({ race, answered, onStart }: { race: RaceDetail; answered: nu
     : 'View your Prediction Pass';
   return (
     <section className="grid items-center gap-8 lg:grid-cols-2 lg:gap-14 lg:py-6" aria-labelledby="race-intro">
-      <LazyGlobe target={place} markers={season && seasonMarkers(season)} route flyIn
-        className="mx-auto aspect-square w-full max-w-[min(100%,40svh)] lg:max-w-[560px]" />
+      {sphereFor(race.name)
+        ? <StaringSphere car={false} className="mx-auto aspect-square w-full max-w-[min(100%,40svh)] lg:max-w-[520px]" />
+        : <LazyGlobe target={place} markers={season && seasonMarkers(season)} route flyIn
+            className="mx-auto aspect-square w-full max-w-[min(100%,40svh)] lg:max-w-[560px]" />}
       <div className="min-w-0">
         <p className="text-[15px] text-muted">Round {race.round} · {race.circuit}</p>
         <h1 id="race-intro" className="mt-3 font-display text-[clamp(3rem,12vw,7rem)] font-black uppercase leading-[0.9] tracking-tight">
