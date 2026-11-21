@@ -45,6 +45,11 @@ export function SeasonNote({ country }: { country: string }) {
       <span aria-hidden>🪔</span>Happy Diwali · Race night<span aria-hidden>🎆</span>
     </p>
   );
+  if (season === 'vegas' && country === 'United States') return (
+    <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#FF2E88]/50 bg-[#FF2E88]/10 px-3 py-1 text-sm font-semibold text-[#FFB3D6]">
+      <span aria-hidden className="text-[#00E5FF]">♠</span>Las Vegas · Race night<span aria-hidden>♦</span>
+    </p>
+  );
   if (season !== 'muertos' || country !== 'Mexico') return null;
   return (
     <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-marigold/40 bg-marigold/10 px-3 py-1 text-sm font-semibold text-marigold">
@@ -215,12 +220,98 @@ function DiwaliNight({ front }: { front: boolean }) {
   );
 }
 
-/** The strip under the navbar for whichever festival is on. */
-export function SeasonBanner() {
+// ---------- Las Vegas: a sunset with palms over a row of chasing marquee bulbs, and one neon diamond ----------
+
+function Palm({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 60 48" className={className} fill="#12061C" preserveAspectRatio="xMidYMax meet">
+      <path d="M29.6 48c1.2-9 2.8-19 1.2-30h1.6c1.8 11 .6 21-.6 30z" />
+      <path d="M31 17C24 10 14 10 5 16c9-3 17-2 26 2z" /><path d="M31 17c7-8 18-8 27-2-9-3-18-2-27 3z" />
+      <path d="M31 17C27 8 20 3 11 3c8 3 14 7 20 15z" /><path d="M31 17c5-10 12-14 21-13-8 2-14 6-21 14z" />
+      <path d="M31 17c-1-8 0-13 3-17-1 6-1 11-3 18z" />
+    </svg>
+  );
+}
+
+/** A low sun cut by horizontal bands, sitting on the horizon. */
+function Sun() {
+  const id = useId();
+  return (
+    <svg viewBox="0 0 80 40" className="absolute bottom-0 left-1/2 h-[92%] -translate-x-1/2">
+      <defs>
+        <linearGradient id={`${id}g`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#FFE76A" /><stop offset=".55" stopColor="#FF8A4C" /><stop offset="1" stopColor="#FF2E88" /></linearGradient>
+        <mask id={`${id}m`}><rect width="80" height="40" fill="#fff" /><rect y="25" width="80" height="1.4" /><rect y="30" width="80" height="2" /><rect y="35" width="80" height="2.8" /></mask>
+      </defs>
+      <circle cx="40" cy="40" r="30" fill={`url(#${id}g)`} mask={`url(#${id}m)`} />
+    </svg>
+  );
+}
+
+// One 1680 x 8 tile of marquee bulbs in three layers that light in turn, so the light runs along the row.
+const BULB = { viewBox: '0 0 1680 8', className: 'absolute inset-0 h-full w-full' };
+const BULBS: number[][] = [[], [], []];
+for (let i = 0; i < 140; i++) BULBS[i % 3].push(6 + i * 12);
+
+function BulbTile() {
+  return (
+    <div className="relative h-2 w-[1680px] shrink-0">
+      <svg {...BULB}><path d="M0 4H1680" stroke="#FF2E88" strokeOpacity=".45" /></svg>
+      {BULBS.map((xs, k) => (
+        <svg key={k} {...BULB} className={`${BULB.className} chase`} style={{ animationDelay: `${-((3 - k) % 3) * 0.6}s` }}>
+          {xs.map((x) => <g key={x}><circle cx={x} cy="4" r="3.6" fill="#FFB347" fillOpacity=".28" /><circle cx={x} cy="4" r="1.6" fill="#FFF1C9" /></g>)}
+        </svg>
+      ))}
+    </div>
+  );
+}
+
+function SunsetStrip({ slim }: { slim?: boolean }) {
+  return (
+    <div aria-hidden className="pointer-events-none overflow-hidden">
+      {!slim && (
+        <div className="sunset relative h-9 overflow-hidden sm:h-10">
+          <Sun />
+          <Palm className="absolute bottom-0 left-[2%] h-full w-12 sm:left-[4%] sm:w-14" />
+          <Palm className="absolute bottom-0 left-[11%] h-[72%] w-9 -scale-x-100 sm:left-[8%]" />
+          <Palm className="absolute bottom-0 right-[3%] h-[92%] w-12 -scale-x-100 sm:right-[5%] sm:w-14" />
+        </div>
+      )}
+      <div className="flex w-max"><BulbTile /><BulbTile /></div>
+    </div>
+  );
+}
+
+/** One large diamond in neon tube, pink outside and cyan inside, glowing slowly behind the page. */
+function VegasNight() {
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+      <svg viewBox="-70 -104 140 208" className="neon-diamond absolute -right-28 top-32 h-[380px] opacity-40 sm:-right-20 sm:top-24 sm:h-[640px] sm:opacity-[.22]" fill="none" strokeLinejoin="round">
+        <path d="M0-100L64 0 0 100-64 0z" stroke="#FF2E88" strokeWidth="1.6" />
+        <path d="M0-84L53 0 0 84-53 0z" stroke="#00E5FF" strokeWidth="1" />
+        <path d="M0-100V-84M64 0H53M0 100V84M-64 0H-53" stroke="#FF2E88" strokeOpacity=".6" strokeWidth=".8" />
+      </svg>
+    </div>
+  );
+}
+
+/** On a finished Las Vegas pass: a stamp, like a ticket punched at the door. */
+export function VegasStamp({ race, locked }: { race: string; locked: boolean }) {
+  if (season !== 'vegas' || !/las vegas/i.test(race)) return null;
+  return (
+    <p className="vegas-stamp mt-5 inline-flex items-center gap-2 rounded-md border-2 border-[#FF2E88] px-3 py-1.5 font-display text-lg font-black uppercase tracking-[0.14em] text-[#FFE3F1]">
+      <span aria-hidden className="text-[#00E5FF]">♠</span>{locked ? 'Locked in' : 'All in'} · Las Vegas<span aria-hidden className="text-[#FF2E88]">♦</span>
+    </p>
+  );
+}
+
+/** The strip under the navbar for whichever festival is on. `slim` (sign-in page): the bulbs only, clear of the logo. */
+export function SeasonBanner({ slim = false }: { slim?: boolean }) {
+  if (season === 'vegas') return <SunsetStrip slim={slim} />;
   return season === 'diwali' ? <StringLights /> : <PapelPicado />;
 }
 
 /** The decorations behind the page for whichever festival is on. */
 export function SeasonBackdrop({ front = false }: { front?: boolean }) {
+  if (season === 'vegas') return <VegasNight />;
   return season === 'diwali' ? <DiwaliNight front={front} /> : <SpookyNight />;
 }

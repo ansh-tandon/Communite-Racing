@@ -458,7 +458,7 @@ export default function LoginPage() {
     <div className="relative isolate min-h-dvh overflow-x-hidden">
       <Backdrop />
       <SeasonBackdrop />
-      <div className="absolute inset-x-0 top-0 z-10"><SeasonBanner /></div>
+      <div className="absolute inset-x-0 top-0 z-10"><SeasonBanner slim /></div>
       {playLights && (
         <LightsOutSequence show={step === 'out' && !!arriving.current} audio={getAudio}
           onDone={() => { const t = arriving.current; if (t) arrive(t); }} />
@@ -486,6 +486,7 @@ export default function LoginPage() {
                 <motion.form key="email" {...swap} onSubmit={send} className="space-y-8" noValidate>
                   <div>
                     {season === 'diwali' && <DiwaliGreeting />}
+                    {season === 'vegas' && <p className="sector mb-3">Las Vegas · Race night</p>}
                     <RevealHeadline />
                     <p className="mt-5 max-w-[26rem] text-base leading-relaxed text-white/80">Answer a few questions before every Grand Prix. Score after the podium. Climb the Communitie Racing championship.</p>
                   </div>

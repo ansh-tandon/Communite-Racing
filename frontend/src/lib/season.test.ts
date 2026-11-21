@@ -14,4 +14,11 @@ describe('seasonAt', () => {
     expect(seasonAt(new Date('2026-11-09T00:29:00Z'))).toBe('diwali');   // 9 Nov, 5:59 am IST
     expect(seasonAt(new Date('2026-11-09T00:30:00Z'))).toBe(null);       // 9 Nov, 6 am IST
   });
+  it('goes neon for the Las Vegas GP from 21 Nov until 6 pm on the 22nd, India time', () => {
+    expect(seasonAt(new Date('2026-11-20T18:29:00Z'))).toBe(null);       // 20 Nov, 11:59 pm IST
+    expect(seasonAt(new Date('2026-11-20T18:30:00Z'))).toBe('vegas');    // 21 Nov, midnight IST
+    expect(seasonAt(new Date('2026-11-22T04:00:00Z'))).toBe('vegas');    // Las Vegas GP lights out
+    expect(seasonAt(new Date('2026-11-22T12:29:00Z'))).toBe('vegas');    // 22 Nov, 5:59 pm IST
+    expect(seasonAt(new Date('2026-11-22T12:30:00Z'))).toBe(null);       // 22 Nov, 6 pm IST
+  });
 });

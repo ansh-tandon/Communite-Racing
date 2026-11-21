@@ -213,3 +213,54 @@ html[data-season='diwali'] .flame-glow { transform-box: fill-box; transform-orig
   html[data-season='diwali'] .flame, html[data-season='diwali'] .flame-glow, html[data-season='diwali'] .mandala { animation: none; }
   html[data-season='diwali'] .burst-wrap { display: none; }
 }
+
+/* Las Vegas GP (21-22 Nov, see lib/season.ts): night black, neon pink and electric cyan, a sunset over the Strip */
+html[data-season='vegas'] {
+  --accent: 255 46 136; --accent-hi: 255 100 175; --accent-lo: 176 18 96;
+  --bg: 10 8 20; --surface: 20 16 34; --surface2: 28 23 46; --surface3: 38 31 60; --line: 58 48 88; --muted: 184 178 208; --faint: 124 116 156;
+}
+html[data-season='vegas'] body {
+  background-image:
+    radial-gradient(70rem 30rem at 85% -10%, rgb(255 46 136 / 0.13), transparent 70%),
+    radial-gradient(56rem 30rem at -10% 105%, rgb(0 229 255 / 0.08), transparent 70%);
+  background-attachment: fixed;
+}
+html[data-season='vegas'] .carbon { background-color: rgb(var(--bg)); }
+html[data-season='vegas'] .panel { box-shadow: inset 0 1px 0 rgb(255 46 136 / 0.22), 0 18px 40px -24px rgb(0 0 0 / 0.9); }
+html[data-season='vegas'] .sector { color: #5CE1FF; }
+html[data-season='vegas'] p.sector::before { content: '\2666'; margin-right: .55em; font-size: .85em; color: #FF2E88; }
+html[data-season='vegas'] .stripe { background: linear-gradient(90deg, #FF2E88, #00E5FF 60%, transparent); }
+html[data-season='vegas'] .bg-accent { background-image: linear-gradient(100deg, #D4126F, #FF2E88); }
+html[data-season='vegas'] .sunset { background: linear-gradient(180deg, rgb(var(--bg)) 0%, #2E0B44 28%, #8E1D6E 58%, #FF4F7E 84%, #FF9A52 100%); }
+/* page titles as neon signs: a white core with a pink glow, leaning forward, lit with a flicker */
+html[data-season='vegas'] main.px-safe h1 {
+  color: #FFF2F9;
+  text-shadow: 0 0 2px #fff, 0 0 10px rgb(255 46 136 / 0.85), 0 0 26px rgb(255 46 136 / 0.5);
+  transform: skewX(-7deg); transform-origin: 0 100%;
+  animation: neon-on 1.6s ease-out 1 both;
+}
+html[data-season='vegas'] main.px-safe h1::after {
+  content: ''; display: block; width: 120px; height: 3px; margin-top: 14px; border-radius: 2px;
+  background: linear-gradient(90deg, #FF2E88, #00E5FF);
+  box-shadow: 0 0 10px rgb(255 46 136 / 0.7), 0 0 18px rgb(0 229 255 / 0.35);
+}
+/* the sign-in headline's second line sits in a clipping mask (its reveal), so its glow stays tight */
+html[data-season='vegas'] .headline-gold {
+  color: #FFC2E0;
+  text-shadow: 0 0 1px #fff, 0 0 5px rgb(255 46 136 / 0.95);
+}
+html[data-season='vegas'] .neon-diamond { filter: drop-shadow(0 0 6px rgb(255 46 136 / 0.7)); animation: neon-breathe 7s ease-in-out infinite; }
+html[data-season='vegas'] .chase { will-change: opacity; animation: chase 1.8s linear infinite; }
+html[data-season='vegas'] .vegas-stamp {
+  box-shadow: 0 0 14px rgb(255 46 136 / 0.45), inset 0 0 10px rgb(255 46 136 / 0.25);
+  text-shadow: 0 0 8px rgb(255 46 136 / 0.8);
+  animation: stamp-in .55s cubic-bezier(.2, 1.4, .4, 1) both;
+}
+@keyframes neon-on { 0% { opacity: .15; } 8% { opacity: 1; } 12% { opacity: .3; } 17% { opacity: 1; } 28% { opacity: .55; } 33%, 100% { opacity: 1; } }
+@keyframes neon-breathe { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+@keyframes chase { 0%, 30% { opacity: 1; } 36%, 100% { opacity: .18; } }
+@keyframes stamp-in { from { opacity: 0; transform: rotate(-5deg) scale(1.6); } to { opacity: 1; transform: rotate(-5deg) scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  html[data-season='vegas'] main.px-safe h1, html[data-season='vegas'] .neon-diamond, html[data-season='vegas'] .chase { animation: none; }
+  html[data-season='vegas'] .vegas-stamp { animation: none; transform: rotate(-5deg); }
+}

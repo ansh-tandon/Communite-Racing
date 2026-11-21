@@ -5,6 +5,7 @@ import type { AnswerValue, Question, RaceDetail } from '../api/types';
 import { Countdown, RaceStatusBadge } from '../components/race';
 import { describe, formatValue, penaltyLabel, QuestionRenderer, TYPE_LABEL } from '../components/quiz';
 import { PredictionPass } from '../components/pass';
+import { VegasStamp } from '../components/seasonal';
 import { Button, EmptyState, ErrorState, Skeleton, cx } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { useAutosave, type SaveState } from '../hooks/useAutosave';
@@ -122,6 +123,7 @@ function PassView({ race, answers, onEdit, locked }: { race: RaceDetail; answers
             : locked ? 'The quiz is locked. This pass holds your final predictions.'
             : <>Everything is saved, and there's nothing to submit. Tap any line on your pass to change it until lights out, <span className="font-semibold">{fmtDateTime(race.quiz_closes_at)}</span>.</>}
         </p>
+        {!res && !left && <VegasStamp race={race.name} locked={locked} />}
         <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
           {!locked && missing !== -1 && <Button iconRight={ArrowRight} onClick={() => onEdit(missing)} className="max-sm:w-full">Answer question {missing + 1}</Button>}
           <Link to={`/races/${race.id}`} className="inline-flex min-h-[44px] items-center gap-2 text-[15px] font-semibold text-muted hover:text-ink"><Flag className="h-4 w-4" aria-hidden />Race hub</Link>

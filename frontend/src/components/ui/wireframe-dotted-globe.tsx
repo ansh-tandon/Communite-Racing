@@ -44,7 +44,7 @@ const COLOURS = {
   dot: '#7A7A7A',
   rim: 'rgba(255,255,255,0.22)',
   route: 'rgba(255,255,255,0.22)',
-  leg: season === 'diwali' ? 'rgba(255,197,61,0.95)' : 'rgba(225,6,0,0.9)',
+  leg: season === 'diwali' ? 'rgba(255,197,61,0.95)' : season === 'vegas' ? 'rgba(255,46,136,0.95)' : 'rgba(225,6,0,0.9)',
   marker: '#FFFFFF',
   markerDone: '#5E5E5E',
 };
@@ -377,8 +377,8 @@ export default function RotatingEarth({ target = null, markers, route = false, f
       {target && (
         <div ref={pinRef} aria-hidden className="pointer-events-none absolute left-0 top-0 opacity-0 transition-opacity duration-200">
           {/* a soft, steady halo rather than a big ping */}
-          <span className={`absolute -left-[9px] -top-[9px] h-[18px] w-[18px] animate-pulse rounded-full ${season === 'diwali' ? 'bg-[#FFC53D]/40 shadow-[0_0_22px_8px_rgba(255,197,61,.45)]' : 'bg-accent/25'}`} />
-          <span className={`absolute -left-1 -top-1 h-2 w-2 rounded-full ring-[1.5px] ring-white ${season === 'diwali' ? 'bg-[#FFC53D]' : 'bg-accent'}`} />
+          <span className={`absolute -left-[9px] -top-[9px] h-[18px] w-[18px] animate-pulse rounded-full ${season === 'diwali' ? 'bg-[#FFC53D]/40 shadow-[0_0_22px_8px_rgba(255,197,61,.45)]' : season === 'vegas' ? 'bg-[#FF2E88]/40 shadow-[0_0_22px_8px_rgba(255,46,136,.45)]' : 'bg-accent/25'}`} />
+          <span className={`absolute -left-1 -top-1 h-2 w-2 rounded-full ring-[1.5px] ring-white ${season === 'diwali' ? 'bg-[#FFC53D]' : season === 'vegas' ? 'bg-[#FF2E88]' : 'bg-accent'}`} />
           {label && arrived && (
             // The box is laid out at its full width from the start (the untyped rest is invisible),
             // so it stays put; only the typed part has a background, so no empty bar shows.
