@@ -153,7 +153,7 @@ function NextRaceGlobe() {
   const markers = CALENDAR.map((r) => ({ lat: r.lat, lng: r.lng, done: isPast(r, now) }));
   return (
     <>
-      <LazyGlobe target={next && { lat: next.lat, lng: next.lng, label: nextUpLabel(next) }} markers={markers} route flyIn sway
+      <LazyGlobe target={next && { lat: next.lat, lng: next.lng, label: nextUpLabel(next) }} markers={markers} route flyIn sway sphere
         // phones: sized by the screen's width (about 90%), capped so it never pushes everything
         // off a short screen; sideways and on laptops it sits beside the form, sized by height
         className="aspect-square w-full max-w-[min(100%,24rem,55svh)] land:max-w-[min(100%,68svh)] lg:max-w-[min(100%,62svh)]" />

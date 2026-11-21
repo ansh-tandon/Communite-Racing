@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { easeCubicInOut, geoGraticule10, geoOrthographic, geoPath, timer, type Timer } from 'd3';
 import type { FeatureCollection, Polygon } from 'geojson';
 import { season } from '../../lib/season';
@@ -32,6 +32,8 @@ interface RotatingEarthProps {
   flyIn?: boolean;
   /** Once on the target, keep turning gently either side of it so the pin never leaves view. */
   sway?: boolean;
+  /** Las Vegas GP: dress the globe as the city's giant LED sphere (sign-in page only). */
+  sphere?: boolean;
   className?: string;
 }
 
@@ -107,7 +109,46 @@ function facing(lng: number, lat: number, rot: [number, number]) {
   return Math.cos(p) * Math.cos(b) * Math.cos(a - l) + Math.sin(p) * Math.sin(b);
 }
 
-export default function RotatingEarth({ target = null, markers, route = false, flyIn = false, sway = false, className = '' }: RotatingEarthProps) {
+// ---------- Las Vegas: the globe as a giant LED sphere, with a band of words running round it ----------
+
+// The band's curve, seen from below like the real thing; its length in viewBox units, so the words loop seamlessly.
+const BAND = 'M0 31Q50 18 100 31';
+const BAND_LEN = 101.1;
+const BAND_TEXT = 'ALL IN ON THE RACE · LAS VEGAS GP · ';
+
+function SphereSkin() {
+  const id = useId().replace(/:/g, '');
+  const still = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  return (
+    <>
+      <svg aria-hidden viewBox="0 0 100 100" className="pointer-events-none absolute inset-0 h-full w-full">
+        <defs>
+          <clipPath id={`${id}c`}><circle cx="50" cy="50" r="47" /></clipPath>
+          <radialGradient id={`${id}t`} cx="35%" cy="30%" r="75%">
+            <stop offset="0" stopColor="#00E5FF" stopOpacity="0" /><stop offset=".6" stopColor="#7C3AED" stopOpacity=".16" /><stop offset="1" stopColor="#FF2E88" stopOpacity=".42" />
+          </radialGradient>
+          <path id={`${id}b`} d={BAND} />
+        </defs>
+        <g clipPath={`url(#${id}c)`}>
+          <circle cx="50" cy="50" r="47" fill={`url(#${id}t)`} />
+          {/* a cyan cap, then the white band with a fine cyan edge either side */}
+          <path d="M0 0H100V20Q50 6 0 20Z" fill="#22D3EE" fillOpacity=".55" />
+          <path d={BAND} fill="none" stroke="#5CE1FF" strokeWidth="11" />
+          <path d={BAND} fill="none" stroke="#FBFBFF" strokeWidth="9.4" />
+          <text className="font-display" fontSize="6" fontWeight="900" fill="#1B1464" dy="2.1">
+            <textPath href={`#${id}b`} textLength={BAND_LEN * 2} lengthAdjust="spacing">
+              {BAND_TEXT + BAND_TEXT}
+              {!still && <animate attributeName="startOffset" from="0" to={-BAND_LEN} dur="16s" repeatCount="indefinite" />}
+            </textPath>
+          </text>
+        </g>
+        <circle cx="50" cy="50" r="47" fill="none" stroke="#5CE1FF" strokeOpacity=".35" strokeWidth=".4" />
+      </svg>
+    </>
+  );
+}
+
+export default function RotatingEarth({ target = null, markers, route = false, flyIn = false, sway = false, sphere = false, className = '' }: RotatingEarthProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pinRef = useRef<HTMLDivElement>(null);
@@ -372,8 +413,11 @@ export default function RotatingEarth({ target = null, markers, route = false, f
       aria-label={target ? `Globe pinned on ${target.label ?? 'the circuit'}` : 'Globe'}
       className={`relative select-none ${className}`}
     >
+      {/* Las Vegas sphere: the glow it throws on the night around it, under the globe */}
+      {sphere && season === 'vegas' && <div aria-hidden className="pointer-events-none absolute inset-[4%] rounded-full shadow-[0_0_60px_8px_rgba(0,229,255,.22),0_0_130px_30px_rgba(255,46,136,.18)]" />}
       {/* pan-y: a vertical swipe still scrolls the page on phones; sideways turns the globe */}
       <canvas ref={canvasRef} aria-hidden className="absolute inset-0 h-full w-full cursor-grab touch-pan-y active:cursor-grabbing" />
+      {sphere && season === 'vegas' && <SphereSkin />}
       {target && (
         <div ref={pinRef} aria-hidden className="pointer-events-none absolute left-0 top-0 opacity-0 transition-opacity duration-200">
           {/* a soft, steady halo rather than a big ping */}
