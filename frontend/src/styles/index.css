@@ -259,10 +259,15 @@ html[data-season='vegas'] .vegas-stamp {
 }
 @keyframes neon-on { 0% { opacity: .15; } 8% { opacity: 1; } 12% { opacity: .3; } 17% { opacity: 1; } 28% { opacity: .55; } 33%, 100% { opacity: 1; } }
 @keyframes trail { from { stroke-dashoffset: 1090; } to { stroke-dashoffset: 0; } }
+/* the staring sphere (sign-in page): its glow on the night, and a blink every few seconds */
+html[data-season='vegas'] .stare { filter: drop-shadow(0 0 18px rgb(255 209 31 / 0.3)) drop-shadow(0 0 44px rgb(255 46 136 / 0.18)); }
+html[data-season='vegas'] .blink { transform-box: fill-box; transform-origin: 50% 50%; animation: blink 5.5s ease-in-out infinite; }
+@keyframes blink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.08); } }
 @keyframes chase { 0%, 30% { opacity: 1; } 36%, 100% { opacity: .18; } }
 @keyframes stamp-in { from { opacity: 0; transform: rotate(-5deg) scale(1.6); } to { opacity: 1; transform: rotate(-5deg) scale(1); } }
 @media (prefers-reduced-motion: reduce) {
   html[data-season='vegas'] main.px-safe h1, html[data-season='vegas'] .chase { animation: none; }
   html[data-season='vegas'] .trail-pulse { display: none; }
+  html[data-season='vegas'] .blink { animation: none; }
   html[data-season='vegas'] .vegas-stamp { animation: none; transform: rotate(-5deg); }
 }

@@ -8,6 +8,7 @@ import type { TokenOut } from '../api/types';
 import { GOOGLE_SIGN_IN, GoogleButton } from '../components/GoogleButton';
 import { SeasonBackdrop, SeasonBanner } from '../components/seasonal';
 import { LazyGlobe } from '../components/LazyGlobe';
+import { StaringSphere } from '../components/vegas-sphere';
 import { Input } from '../components/ui/input';
 import { CardButton } from '../components/ui/sign-in-card-2';
 import { CALENDAR, isPast, nextRace, nextUpLabel } from '../fixtures/circuits';
@@ -153,10 +154,13 @@ function NextRaceGlobe() {
   const markers = CALENDAR.map((r) => ({ lat: r.lat, lng: r.lng, done: isPast(r, now) }));
   return (
     <>
-      <LazyGlobe target={next && { lat: next.lat, lng: next.lng, label: nextUpLabel(next) }} markers={markers} route flyIn sway sphere
+      {/* Las Vegas GP: a giant sphere watching the cars go by stands in for the globe */}
+      {season === 'vegas'
+        ? <StaringSphere className="aspect-square w-full max-w-[min(100%,24rem,55svh)] land:max-w-[min(100%,68svh)] lg:max-w-[min(100%,62svh)]" />
+        : <LazyGlobe target={next && { lat: next.lat, lng: next.lng, label: nextUpLabel(next) }} markers={markers} route flyIn sway
         // phones: sized by the screen's width (about 90%), capped so it never pushes everything
         // off a short screen; sideways and on laptops it sits beside the form, sized by height
-        className="aspect-square w-full max-w-[min(100%,24rem,55svh)] land:max-w-[min(100%,68svh)] lg:max-w-[min(100%,62svh)]" />
+        className="aspect-square w-full max-w-[min(100%,24rem,55svh)] land:max-w-[min(100%,68svh)] lg:max-w-[min(100%,62svh)]" />}
       <p className="mt-4 max-w-sm text-center text-sm text-white/60 land:mt-2 lg:mt-6">
         {next
           ? <RaceLine race={next} />
