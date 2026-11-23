@@ -8,6 +8,7 @@ import type { TokenOut } from '../api/types';
 import { GOOGLE_SIGN_IN, GoogleButton } from '../components/GoogleButton';
 import { SeasonBackdrop, SeasonBanner } from '../components/seasonal';
 import { LazyGlobe } from '../components/LazyGlobe';
+import { PoweredBy } from '../components/powered-by';
 import { StaringSphere } from '../components/vegas-sphere';
 import { Input } from '../components/ui/input';
 import { CardButton } from '../components/ui/sign-in-card-2';
@@ -470,13 +471,15 @@ export default function LoginPage() {
 
       {/* logo, headline, form and footer share one left edge; the globe balances the right */}
       <div className="mx-auto flex min-h-dvh max-w-7xl flex-col px-5 sm:px-10 lg:px-16">
-        <header className="flex items-center gap-4 pt-[max(1.5rem,env(safe-area-inset-top))] sm:pt-8">
+        <header className="flex flex-wrap items-center gap-x-4 gap-y-4 pt-[max(1.5rem,env(safe-area-inset-top))] sm:pt-8">
           <img src="/cr-logo-white.png" alt="Communitie Racing" width={733} height={224} className="h-9 w-auto sm:h-10" />
           <span className="flex items-center gap-2 text-sm font-semibold text-white/75">
             {/* an F1 car's rear rain light, blinking */}
             <span aria-hidden className="h-1.5 w-3.5 animate-rainlight rounded-[1px] bg-[#FF2A1F] shadow-[0_0_8px_1px_rgba(255,42,31,0.6)]" />
             Quiz League
           </span>
+          {/* phones: its own full-width row under the logo; wider screens: across from the logo */}
+          <PoweredBy size="lg" className="w-full justify-center sm:ml-auto sm:w-auto" />
         </header>
 
         <main className="grid flex-1 content-center items-center gap-8 py-8 land:grid-cols-2 land:gap-8 land:py-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-12 lg:py-8">
