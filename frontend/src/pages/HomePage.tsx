@@ -6,6 +6,7 @@ import { EmptyState, ErrorState, SectionTitle, Skeleton } from '../components/ui
 import { useAuth } from '../hooks/useAuth';
 import { useRaces, useStandings } from '../hooks/queries';
 import { featuredRace, ordinal } from '../utils/format';
+import { PoweredBy } from '../components/powered-by';
 
 export function UserStats() {
   const { user } = useAuth();
@@ -76,6 +77,8 @@ export default function HomePage() {
           <UserStats />
         </aside>
       </div>
+
+      <footer className="pt-4"><PoweredBy /></footer>
     </div>
   );
 }

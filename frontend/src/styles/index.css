@@ -271,3 +271,8 @@ html[data-season='vegas'] .blink { transform-box: fill-box; transform-origin: 50
   html[data-season='vegas'] .blink { animation: none; }
   html[data-season='vegas'] .vegas-stamp { animation: none; transform: rotate(-5deg); }
 }
+
+/* matchnight's red floodlight lamp breathes like a broadcast "live" light (Powered by matchnight, Home) */
+.mn-live { animation: mn-live 2.4s ease-in-out infinite; }
+@keyframes mn-live { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .mn-live { animation: none; } }
